@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Government Schemes - PlantCare AI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    .schemes-wrap{max-width:1050px;margin:30px auto;padding:20px 22px 50px}
+    .schemes-heading{text-align:center;color:#174d2a;margin:15px 0 8px;font-size:clamp(25px,4vw,36px)}
+    .schemes-intro{text-align:center;max-width:760px;margin:0 auto 25px;line-height:1.65;color:#35533c}
+    .scheme-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+    .scheme-card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 6px 18px #174d2a18;display:flex;flex-direction:column;gap:12px}
+    .scheme-icon{width:48px;height:48px;border-radius:14px;background:#e4f6e5;color:#23713a;display:flex;align-items:center;justify-content:center}
+    .scheme-card h2{font-size:19px;color:#174d2a;line-height:1.35}
+    .scheme-card p{line-height:1.6;color:#4c5d50;font-size:14px}
+    .scheme-card a{display:inline-flex;align-items:center;gap:7px;margin-top:auto;background:#23713a;color:white;text-decoration:none;padding:11px 14px;border-radius:10px;font-weight:600;justify-content:center}
+    .scheme-note{margin-top:22px;padding:15px 17px;background:#fff8df;border-left:4px solid #d6a400;border-radius:10px;line-height:1.6;font-size:13px;color:#584b1b}
+    @media(max-width:600px){.schemes-wrap{padding:15px 14px 40px}}
+  </style>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header"><div class="sidebar-logo"><i class="material-icons">eco</i></div><h2 style="font-size:20px;">PlantCare AI</h2></div>
+    <div class="sidebar-menu">
+      <a href="/home" class="menu-item"><i class="material-icons">home</i><span>Home</span></a>
+      <a href="/diagnosis" class="menu-item"><i class="material-icons">camera_alt</i><span>AI Diagnosis</span></a>
+      <a href="/chat" class="menu-item"><i class="material-icons">chat</i><span>Plant Doctor</span></a>
+      <a href="/history" class="menu-item"><i class="material-icons">history</i><span>History</span></a>
+      <a href="/schemes" class="menu-item active"><i class="material-icons">agriculture</i><span data-i18n="schemesNav">Government Schemes</span></a>
+      <a href="/about" class="menu-item"><i class="material-icons">info</i><span>About App</span></a>
+      <div class="language-menu-item"><label for="languageSelect" data-i18n="languageLabel">🌐 Language</label>
+        <select id="languageSelect" aria-label="Choose language" onchange="changeLanguage(this.value)">
+          <option value="en" {% if current_language == 'en' %}selected{% endif %}>English</option>
+          <option value="hi" {% if current_language == 'hi' %}selected{% endif %}>हिन्दी (Hindi)</option>
+          <option value="mr" {% if current_language == 'mr' %}selected{% endif %}>मराठी (Marathi)</option>
+        </select>
+      </div>
+      <div style="border-top:1px solid var(--gray-100);margin:10px 0"></div>
+      <a href="#" onclick="handleLogout()" class="menu-item"><i class="material-icons">logout</i><span>Logout</span></a>
+    </div>
+  </div>
+  <button class="sidebar-btn" onclick="toggleSidebar()" aria-label="Open menu"><i class="material-icons">menu</i></button>
+  <main class="schemes-wrap">
+    <h1 class="schemes-heading" data-scheme-i18n="pageTitle">
+      {% if current_language == 'hi' %}किसानों के लिए सरकारी योजनाएँ{% elif current_language == 'mr' %}शेतकऱ्यांसाठी शासकीय योजना{% else %}Government Schemes for Farmers{% endif %}
+    </h1>
+    <p class="schemes-intro" data-scheme-i18n="pageIntro">
+      {% if current_language == 'hi' %}कृषि सहायता योजनाएँ देखें और पात्रता तथा आवेदन की नवीनतम जानकारी के लिए आधिकारिक पोर्टल खोलें।{% elif current_language == 'mr' %}कृषी सहाय्य योजना पाहा आणि पात्रता व अर्जाच्या नवीन माहितीसाठी अधिकृत पोर्टल उघडा.{% else %}Explore agricultural support schemes and open their official portals for the latest eligibility and application details.{% endif %}
+    </p>
+    <section class="scheme-grid">
+      <article class="scheme-card">
+        <div class="scheme-icon"><i class="material-icons">payments</i></div>
+        <h2>PM-KISAN</h2>
+        <p>
+          {% if current_language == 'hi' %}पात्र किसान परिवारों को आय सहायता प्रदान करने वाली केंद्र सरकार की योजना।{% elif current_language == 'mr' %}पात्र शेतकरी कुटुंबांना आर्थिक सहाय्य देणारी केंद्र सरकारची योजना.{% else %}A central government income-support scheme for eligible farmer families.{% endif %}
+        </p>
+        <p data-scheme-i18n="details">{% if current_language == 'hi' %}पात्रता और आवेदन की वर्तमान स्थिति आधिकारिक पोर्टल पर जाँचें।{% elif current_language == 'mr' %}पात्रता आणि अर्जाची सध्याची स्थिती अधिकृत पोर्टलवर तपासा.{% else %}Check eligibility and current application status on the official portal.{% endif %}</p>
+        <a href="https://pmkisan.gov.in/" target="_blank" rel="noopener noreferrer"><span data-scheme-i18n="official">{% if current_language == 'hi' %}आधिकारिक वेबसाइट{% elif current_language == 'mr' %}अधिकृत वेबसाइट{% else %}Official website{% endif %}</span><i class="material-icons">open_in_new</i></a>
+      </article>
+      <article class="scheme-card">
+        <div class="scheme-icon"><i class="material-icons">umbrella</i></div>
+        <h2>Pradhan Mantri Fasal Bima Yojana (PMFBY)</h2>
+        <p>
+          {% if current_language == 'hi' %}अधिसूचित फसलों और लागू शर्तों के अनुसार किसानों के लिए फसल बीमा योजना।{% elif current_language == 'mr' %}अधिसूचित पिके आणि लागू अटींनुसार शेतकऱ्यांसाठी पीक विमा योजना.{% else %}Crop insurance for farmers, subject to notified crops and applicable scheme conditions.{% endif %}
+        </p>
+        <p data-scheme-i18n="details">{% if current_language == 'hi' %}पात्रता और आवेदन की वर्तमान स्थिति आधिकारिक पोर्टल पर जाँचें।{% elif current_language == 'mr' %}पात्रता आणि अर्जाची सध्याची स्थिती अधिकृत पोर्टलवर तपासा.{% else %}Check eligibility and current application status on the official portal.{% endif %}</p>
+        <a href="https://pmfby.gov.in/" target="_blank" rel="noopener noreferrer"><span data-scheme-i18n="official">{% if current_language == 'hi' %}आधिकारिक वेबसाइट{% elif current_language == 'mr' %}अधिकृत वेबसाइट{% else %}Official website{% endif %}</span><i class="material-icons">open_in_new</i></a>
+      </article>
+      <article class="scheme-card">
+        <div class="scheme-icon"><i class="material-icons">account_balance</i></div>
+        <h2>Kisan Credit Card (KCC)</h2>
+        <p>
+          {% if current_language == 'hi' %}पात्र किसानों को कृषि और संबंधित जरूरतों के लिए बैंक ऋण सुविधा के बारे में जानकारी।{% elif current_language == 'mr' %}पात्र शेतकऱ्यांना शेती व संबंधित गरजांसाठी बँक कर्ज सुविधेबद्दल माहिती.{% else %}Information about bank credit facilities for eligible farmers’ agricultural and related needs.{% endif %}
+        </p>
+        <p data-scheme-i18n="details">{% if current_language == 'hi' %}पात्रता और आवेदन की वर्तमान स्थिति आधिकारिक पोर्टल पर जाँचें।{% elif current_language == 'mr' %}पात्रता आणि अर्जाची सध्याची स्थिती अधिकृत पोर्टलवर तपासा.{% else %}Check eligibility and current application status on the official portal.{% endif %}</p>
+        <a href="https://www.myscheme.gov.in/" target="_blank" rel="noopener noreferrer"><span data-scheme-i18n="official">{% if current_language == 'hi' %}आधिकारिक वेबसाइट{% elif current_language == 'mr' %}अधिकृत वेबसाइट{% else %}Official website{% endif %}</span><i class="material-icons">open_in_new</i></a>
+      </article>
+      <article class="scheme-card">
+        <div class="scheme-icon"><i class="material-icons">agriculture</i></div>
+        <h2>MahaDBT Farmer Schemes</h2>
+        <p>
+          {% if current_language == 'hi' %}महाराष्ट्र के किसानों के लिए कृषि विभाग की विभिन्न योजनाओं और आवेदन सेवाओं का पोर्टल।{% elif current_language == 'mr' %}महाराष्ट्रातील शेतकऱ्यांसाठी कृषी विभागाच्या विविध योजना आणि अर्ज सेवांचे पोर्टल.{% else %}Maharashtra’s portal for agricultural department schemes and application services for farmers.{% endif %}
+        </p>
+        <p data-scheme-i18n="details">{% if current_language == 'hi' %}पात्रता और आवेदन की वर्तमान स्थिति आधिकारिक पोर्टल पर जाँचें।{% elif current_language == 'mr' %}पात्रता आणि अर्जाची सध्याची स्थिती अधिकृत पोर्टलवर तपासा.{% else %}Check eligibility and current application status on the official portal.{% endif %}</p>
+        <a href="https://mahadbt.maharashtra.gov.in/farmer/login" target="_blank" rel="noopener noreferrer"><span data-scheme-i18n="official">{% if current_language == 'hi' %}आधिकारिक वेबसाइट{% elif current_language == 'mr' %}अधिकृत वेबसाइट{% else %}Official website{% endif %}</span><i class="material-icons">open_in_new</i></a>
+      </article>
+    </section>
+    <div class="scheme-note" data-scheme-i18n="disclaimer">
+      {% if current_language == 'hi' %}योजनाओं की उपलब्धता, पात्रता, लाभ और आवेदन की अवधि बदल सकती है। आवेदन करने से पहले आधिकारिक सरकारी पोर्टल पर नवीनतम जानकारी की पुष्टि करें।{% elif current_language == 'mr' %}योजनांची उपलब्धता, पात्रता, लाभ आणि अर्जाचा कालावधी बदलू शकतो. अर्ज करण्यापूर्वी अधिकृत सरकारी पोर्टलवरील नवीन माहिती तपासा.{% else %}Scheme availability, eligibility, benefits and application windows may change. Confirm the latest details on the official government portal before applying.{% endif %}
+    </div>
+  </main>
+  <script>
+    function toggleSidebar(){document.getElementById('sidebar').classList.toggle('active');document.getElementById('sidebarOverlay').classList.toggle('active');}
+    async function handleLogout(){try{await fetch('/api/logout',{method:'POST'});}finally{window.location.href='/login';}}
+  </script>
+  <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+</body>
+</html>
