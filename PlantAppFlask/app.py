@@ -242,25 +242,25 @@ def api_analyze():
                 last_error = e
                 continue
         
-       if not gemini_response:
-    print("All models failed. Checking available models:")
+               if not gemini_response:
+            print("All models failed. Checking available models:")
 
-    try:
-        available_models = list(genai.list_models())
+            try:
+                available_models = list(genai.list_models())
 
-        if not available_models:
-            print("No models returned by the API.")
+                if not available_models:
+                    print("No models returned by the API.")
 
-        for m in available_models:
-            print(
-                f"Model: {m.name} | "
-                f"Methods: {m.supported_generation_methods}"
-            )
+                for m in available_models:
+                    print(
+                        f"Model: {m.name} | "
+                        f"Methods: {m.supported_generation_methods}"
+                    )
 
-    except Exception as model_error:
-        print(f"Could not list models: {model_error}")
+            except Exception as model_error:
+                print(f"Could not list models: {model_error}")
 
-    raise last_error or Exception("All models failed")
+            raise last_error or Exception("All models failed")
 
         # Debug Logging
         print("Debugging Gemini Response:")
