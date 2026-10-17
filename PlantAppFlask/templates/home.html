@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ session.get('language', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,6 +36,33 @@
                 <i class="material-icons">history</i>
                 <span>History</span>
             </a>
+            <a href="/schemes" class="menu-item">
+              <i class="material-icons">agriculture</i>
+              <span data-i18n="schemesNav">Government Schemes</span>
+            </a>
+
+            <div class="language-selector" style="padding: 12px 15px;">
+             <label for="languageSelect" data-i18n="languageLabel">
+               🌐 Language
+            </label>
+
+            <select id="languageSelect"
+               onchange="changeLanguage(this.value)"
+               style="width: 100%; padding: 8px; margin-top: 8px;">
+               <option value="en"
+               {% if session.get('language', 'en') == 'en' %}selected{% endif %}>
+                English
+                </option>
+                <option value="hi"
+                {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>
+               हिन्दी (Hindi)
+               </option>
+                <option value="mr"
+                {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>
+                मराठी (Marathi)
+                </option>
+               </select>
+             </div>
             <a href="/about" class="menu-item">
                 <i class="material-icons">info</i>
                 <span>About App</span>
@@ -248,5 +275,6 @@
             }
         }
     </script>
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
 </body>
 </html>

@@ -74,6 +74,20 @@ def history():
 def about():
     return render_template('about.html')
 
+@app.route('/schemes')
+@login_required
+def schemes():
+    return render_template('schemes.html')
+
+@app.route('/set-language/<language>')
+@login_required
+def set_language(language):
+    if language not in ['en', 'hi', 'mr']:
+        language = 'en'
+
+    session['language'] = language
+    return redirect(request.referrer or url_for('home'))
+
 # ===== API Endpoints =====
 
 @app.route('/api/signup', methods=['POST'])
