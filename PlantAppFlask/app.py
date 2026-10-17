@@ -220,12 +220,8 @@ def api_analyze():
         
         # List of models to try in order of preference (Based on actual available models in logs)
         models_to_try = [
-            'gemini-2.5-flash-lite',
-            'gemini-2.5-flash-lite-preview-09-2025',
-            'gemini-pro-latest',
-            'gemini-1.5-flash',
-            'gemini-1.5-flash-latest',
-            'gemini-2.0-flash-exp'
+           'gemini-2.5-flash-lite',
+           'gemini-2.5-flash'
         ]
         
         gemini_response = None
@@ -246,16 +242,25 @@ def api_analyze():
                 last_error = e
                 continue
         
-        if not gemini_response:
-            # If all failed, print available models for debugging
-            try:
-                print("All models failed. Available models:")
-                for m in genai.list_models():
-                    if 'generateContent' in m.supported_generation_methods:
-                        print(f" - {m.name}")
-            except:
-                pass
-            raise last_error or Exception("All models failed")
+       if not gemini_response:
+    print("All models failed. Checking available models:")
+
+    try:
+        available_models = list(genai.list_models())
+
+        if not available_models:
+            print("No models returned by the API.")
+
+        for m in available_models:
+            print(
+                f"Model: {m.name} | "
+                f"Methods: {m.supported_generation_methods}"
+            )
+
+    except Exception as model_error:
+        print(f"Could not list models: {model_error}")
+
+    raise last_error or Exception("All models failed")
 
         # Debug Logging
         print("Debugging Gemini Response:")
