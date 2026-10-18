@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ session.get('lang', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -44,6 +44,10 @@
             <a href="/chat" class="menu-item">
                 <i class="material-icons">chat</i>
                 <span>Plant Doctor</span>
+            </a>
+            <a href="/schemes" class="menu-item">
+                <i class="material-icons">policy</i>
+                <span>Government Schemes</span>
             </a>
             <a href="/history" class="menu-item active">
                 <i class="material-icons">history</i>
@@ -227,5 +231,7 @@
             }
         }
     </script>
+    <!-- Language Script Added Here -->
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
 </body>
 </html>

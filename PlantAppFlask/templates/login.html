@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ session.get('language', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
+        body {
+            position: relative;
+        }
         .message { padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
         .message.success { background: #c8e6c9; color: #2e7d32; }
         .message.error { background: #ffcdd2; color: #c62828; }
@@ -24,9 +27,16 @@
     </style>
 </head>
 <body>
-    <div class="container">
-      
+    <!-- Language Selector Top Right -->
+    <div style="position: absolute; top: 20px; right: 20px; z-index: 100;">
+        <select id="languageSelect" onchange="changeLanguage(this.value)" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #ccc; background: white; font-size: 14px; cursor: pointer;">
+            <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>English</option>
+            <option value="hi" {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>हिन्दी (Hindi)</option>
+            <option value="mr" {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>मराठी (Marathi)</option>
+        </select>
+    </div>
 
+    <div class="container">
         <!-- Logo -->
         <div class="logo-container">
             <div class="logo-circle">
@@ -195,5 +205,7 @@
             }
         }
     </script>
+    <!-- Language Script Added Here -->
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
 </body>
 </html>

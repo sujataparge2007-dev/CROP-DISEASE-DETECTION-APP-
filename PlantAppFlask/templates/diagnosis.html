@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ session.get('lang', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -265,7 +265,7 @@
                     document.getElementById('plantName').textContent = data.plantName || 'Unknown';
                     document.getElementById('diseaseName').textContent = data.disease || 'Unknown';
                     document.getElementById('confidence').textContent = data.confidence || '0%';
-                    document.getElementById('confidence').textContent = data.confidence || '0%';
+                    
                     // Populate Precautions
                     const precautionsList = document.getElementById('precautionsList');
                     precautionsList.innerHTML = '';
@@ -319,23 +319,6 @@
                         diseaseIcon.textContent = 'warning';
                     }
                     
-                    // Show health analysis if available
-                    const healthSection = document.getElementById('healthAnalysis');
-                    if (data.healthAnalysis || data.health_score) {
-                         const score = data.health_score || (data.healthAnalysis ? data.healthAnalysis.health_score : 0);
-                         if(healthSection) {
-                            healthSection.innerHTML = `
-                                <div class="result-row">
-                                    <i class="material-icons" style="color: ${score > 70 ? '#4CAF50' : score > 40 ? '#FF9800' : '#F44336'};">favorite</i>
-                                    <div>
-                                        <p class="result-label">Health Score</p>
-                                        <p class="result-value">${score}%</p>
-                                    </div>
-                                </div>
-                            `;
-                         }
-                    }
-                    
                     // Show results
                     document.getElementById('actionButtons').classList.add('hidden');
                     document.getElementById('analyzeBtn').classList.add('hidden');
@@ -384,6 +367,7 @@
             document.getElementById('analyzeBtn').disabled = false;
             document.getElementById('resultsCard').classList.add('hidden');
         }
+
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
             document.getElementById('sidebarOverlay').classList.toggle('active');
@@ -423,5 +407,8 @@
         }
     </script>
     <div style="text-align: center; color: #ccc; font-size: 10px; margin-top: 20px;">v1.1 Debug</div>
+    
+    <!-- Language Script Added Here -->
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
 </body>
 </html>
