@@ -412,10 +412,10 @@ Rules:
 
         # Attempt Gemini models in order.
         # If one is unavailable, try the next one.
-       models_to_try = [
-    GEMINI_MODEL,
-    "gemini-3.5-flash"
-]
+        models_to_try = [
+         GEMINI_MODEL,
+         "gemini-3.5-flash"
+        ]
         gemini_response = None
         last_error = None
         used_model = None
