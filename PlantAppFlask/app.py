@@ -1,392 +1,758 @@
-from flask import Flask, render_template, jsonify, request, session, redirect, url_for
+from flask import (
+    Flask, render_template, jsonify, request,
+    session, redirect, url_for
+)
 from flask_cors import CORS
 from functools import wraps
+from dotenv import load_dotenv
+from PIL import Image, UnidentifiedImageError
 import os
+import io
+import json
+import uuid
+import traceback
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'plantcare-ai-secret-key-2026'
+
+# Use a stable secret key in Render environment variables.
+app.secret_key = os.getenv(
+    "FLASK_SECRET_KEY",
+    "plantcare-ai-secret-key-2026"
+)
+
 CORS(app)
 
-# Initialize database
-from database import init_db, create_user, login_user, save_diagnosis, get_diagnosis_history, save_chat, get_diagnosis_stats, get_user_by_email, reset_password
+# --------------------------------------------------
+# DATABASE
+# --------------------------------------------------
+
+from database import (
+    init_db,
+    create_user,
+    login_user,
+    save_diagnosis,
+    get_diagnosis_history,
+    save_chat,
+    get_diagnosis_stats,
+    get_user_by_email,
+    reset_password
+)
+
 init_db()
 
-# Upload folder for images
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ===== Authentication Decorator =====
+
+# --------------------------------------------------
+# GEMINI CONFIGURATION
+# --------------------------------------------------
+
+import google.generativeai as genai
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Set this in Render if you want to change the model.
+GEMINI_MODEL = os.getenv(
+    "GEMINI_MODEL",
+    "gemini-2.5-flash"
+)
+
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+
+
+def get_gemini_model():
+    """Return a configured Gemini model."""
+
+    if not GEMINI_API_KEY:
+        raise RuntimeError(
+            "GEMINI_API_KEY is missing. "
+            "Add it in Render Environment Variables."
+        )
+
+    return genai.GenerativeModel(GEMINI_MODEL)
+
+
+# --------------------------------------------------
+# AUTHENTICATION DECORATOR
+# --------------------------------------------------
+
 def login_required(f):
-    """Decorator to protect routes - requires login"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            # For API routes, return JSON error
-            if request.path.startswith('/api/'):
-                return jsonify({"success": False, "error": "Please login first"}), 401
-            # For page routes, redirect to login
-            return redirect(url_for('login'))
+
+        if "user_id" not in session:
+
+            if request.path.startswith("/api/"):
+                return jsonify({
+                    "success": False,
+                    "error": "Please login first"
+                }), 401
+
+            return redirect(url_for("login"))
+
         return f(*args, **kwargs)
+
     return decorated_function
 
-# ===== Public Routes (no login required) =====
 
-@app.route('/')
+# --------------------------------------------------
+# PAGE ROUTES
+# --------------------------------------------------
+
+@app.route("/")
 def index():
-    if 'user_id' in session:
-        return redirect(url_for('home'))
-    return render_template('login.html')
 
-@app.route('/login')
+    if "user_id" in session:
+        return redirect(url_for("home"))
+
+    return render_template("login.html")
+
+
+@app.route("/login")
 def login():
-    if 'user_id' in session:
-        return redirect(url_for('home'))
-    return render_template('login.html')
 
-@app.route('/forgot-password')
+    if "user_id" in session:
+        return redirect(url_for("home"))
+
+    return render_template("login.html")
+
+
+@app.route("/forgot-password")
 def forgot_password():
-    return render_template('forgot_password.html')
+    return render_template("forgot_password.html")
 
-# ===== Protected Routes (login required) =====
 
-@app.route('/home')
+@app.route("/home")
 @login_required
 def home():
-    return render_template('home.html')
+    return render_template("home.html")
 
-@app.route('/diagnosis')
+
+@app.route("/diagnosis")
 @login_required
 def diagnosis():
-    return render_template('diagnosis.html')
+    return render_template("diagnosis.html")
 
-@app.route('/chat')
+
+@app.route("/chat")
 @login_required
 def chat():
-    return render_template('chat.html')
+    return render_template("chat.html")
 
-@app.route('/history')
+
+@app.route("/history")
 @login_required
 def history():
-    return render_template('history.html')
+    return render_template("history.html")
 
-@app.route('/about')
+
+@app.route("/about")
 @login_required
 def about():
-    return render_template('about.html')
+    return render_template("about.html")
 
-@app.route('/schemes')
+
+@app.route("/schemes")
 @login_required
 def schemes():
-    return render_template('schemes.html')
+    return render_template("schemes.html")
 
-@app.route('/set-language/<language>')
+
+@app.route("/set-language/<language>")
 @login_required
 def set_language(language):
-    if language not in ['en', 'hi', 'mr']:
-        language = 'en'
 
-    session['language'] = language
-    return redirect(request.referrer or url_for('home'))
+    if language not in ["en", "hi", "mr"]:
+        language = "en"
 
-# ===== API Endpoints =====
+    session["language"] = language
 
-@app.route('/api/signup', methods=['POST'])
+    return redirect(
+        request.referrer or url_for("home")
+    )
+
+
+# --------------------------------------------------
+# SIGNUP API
+# --------------------------------------------------
+
+@app.route("/api/signup", methods=["POST"])
 def api_signup():
-    """User signup with database storage"""
-    data = request.json
-    name = data.get('name', '')
-    email = data.get('email', '')
-    password = data.get('password', '')
-    phone = data.get('phone', '')
-    dob = data.get('dob', '')
-    gender = data.get('gender', '')
-    
+
+    data = request.get_json(silent=True) or {}
+
+    name = data.get("name", "")
+    email = data.get("email", "")
+    password = data.get("password", "")
+    phone = data.get("phone", "")
+    dob = data.get("dob", "")
+    gender = data.get("gender", "")
+
     if not email or not password:
-        return jsonify({"success": False, "error": "Email and password required"})
-    
-    result = create_user(name, email, password, phone, dob, gender)
+        return jsonify({
+            "success": False,
+            "error": "Email and password required"
+        }), 400
+
+    result = create_user(
+        name, email, password, phone, dob, gender
+    )
+
     return jsonify(result)
 
-@app.route('/api/login', methods=['POST'])
+
+# --------------------------------------------------
+# LOGIN API
+# --------------------------------------------------
+
+@app.route("/api/login", methods=["POST"])
 def api_login():
-    """User login with database verification"""
-    data = request.json
-    email = data.get('email', '')
-    password = data.get('password', '')
-    
+
+    data = request.get_json(silent=True) or {}
+
+    email = data.get("email", "")
+    password = data.get("password", "")
+
     result = login_user(email, password)
-    
-    if result['success']:
-        session['user_id'] = result['user']['id']
-        session['user_name'] = result['user']['name']
-        session['user_email'] = result['user']['email']
-    
+
+    if result.get("success"):
+
+        user = result["user"]
+
+        session["user_id"] = user["id"]
+        session["user_name"] = user["name"]
+        session["user_email"] = user["email"]
+
     return jsonify(result)
 
-@app.route('/api/logout', methods=['POST'])
+
+# --------------------------------------------------
+# LOGOUT API
+# --------------------------------------------------
+
+@app.route("/api/logout", methods=["POST"])
 def api_logout():
-    """User logout"""
-    session.clear()
-    return jsonify({"success": True, "message": "Logged out"})
 
-@app.route('/api/reset-password', methods=['POST'])
+    session.clear()
+
+    return jsonify({
+        "success": True,
+        "message": "Logged out"
+    })
+
+
+# --------------------------------------------------
+# RESET PASSWORD API
+# --------------------------------------------------
+
+@app.route("/api/reset-password", methods=["POST"])
 def api_reset_password():
-    """Reset user password"""
-    data = request.json
-    email = data.get('email', '')
-    new_password = data.get('newPassword', '')
-    
+
+    data = request.get_json(silent=True) or {}
+
+    email = data.get("email", "")
+    new_password = data.get("newPassword", "")
+
     if not email or not new_password:
-        return jsonify({"success": False, "error": "Email and new password required"})
-    
+        return jsonify({
+            "success": False,
+            "error": "Email and new password required"
+        }), 400
+
     if len(new_password) < 4:
-        return jsonify({"success": False, "error": "Password must be at least 4 characters"})
-    
+        return jsonify({
+            "success": False,
+            "error": "Password must be at least 4 characters"
+        }), 400
+
     result = reset_password(email, new_password)
+
     return jsonify(result)
 
-@app.route('/api/user', methods=['GET'])
+
+# --------------------------------------------------
+# CURRENT USER API
+# --------------------------------------------------
+
+@app.route("/api/user", methods=["GET"])
 @login_required
 def api_user():
-    """Get current user info"""
+
     return jsonify({
         "success": True,
         "user": {
-            "id": session.get('user_id'),
-            "name": session.get('user_name'),
-            "email": session.get('user_email')
+            "id": session.get("user_id"),
+            "name": session.get("user_name"),
+            "email": session.get("user_email")
         }
     })
 
-@app.route('/api/analyze', methods=['POST'])
+
+# --------------------------------------------------
+# PLANT DISEASE ANALYSIS
+# --------------------------------------------------
+
+@app.route("/api/analyze", methods=["POST"])
 @login_required
 def api_analyze():
-    """Analyze plant image using Gemini Vision API with database storage"""
+
     try:
-        if 'image' not in request.files:
-            return jsonify({"success": False, "error": "No image provided"})
-            
-        image_file = request.files['image']
+
+        # Check uploaded image
+        if "image" not in request.files:
+            return jsonify({
+                "success": False,
+                "error": "No image provided"
+            }), 400
+
+        image_file = request.files["image"]
+
+        if not image_file or not image_file.filename:
+            return jsonify({
+                "success": False,
+                "error": "Please select a plant image"
+            }), 400
+
         image_bytes = image_file.read()
-        
-        # Save image locally
-        image_filename = f"scan_{len(os.listdir(UPLOAD_FOLDER))}_{session.get('user_id')}.jpg"
-        image_path = os.path.join(UPLOAD_FOLDER, image_filename)
-        with open(image_path, 'wb') as f:
-            f.write(image_bytes)
 
-        # Gemini Vision Integration
-        import google.generativeai as genai
-        from dotenv import load_dotenv
-        import PIL.Image
-        import io
-        import json
-        
-        load_dotenv()
-        api_key = os.getenv('GEMINI_API_KEY')
-        
-        if not api_key:
-             return jsonify({"success": False, "error": "Gemini API Key not found"})
+        if not image_bytes:
+            return jsonify({
+                "success": False,
+                "error": "The uploaded image is empty"
+            }), 400
 
-        genai.configure(api_key=api_key)
-        
-        # Prepare image for Gemini (optimized for low memory)
-        img = PIL.Image.open(io.BytesIO(image_bytes))
-        img = img.convert('RGB')  # Remove alpha channel to reduce memory
-        img.thumbnail((512, 512))  # Smaller size for faster processing
-        
-        # Compress to JPEG in memory to reduce size further
+        # Validate image
+        try:
+
+            with Image.open(io.BytesIO(image_bytes)) as original:
+                original.verify()
+
+            with Image.open(io.BytesIO(image_bytes)) as original:
+                img = original.convert("RGB")
+
+        except (
+            UnidentifiedImageError,
+            OSError,
+            ValueError
+        ):
+            return jsonify({
+                "success": False,
+                "error": "Invalid image. Please upload a JPG or PNG."
+            }), 400
+
+        # Resize image to reduce processing time
+        img.thumbnail((1024, 1024))
+
+        # Save image as JPEG in memory
         buffer = io.BytesIO()
-        img.save(buffer, format='JPEG', quality=85)
+        img.save(buffer, format="JPEG", quality=85)
         buffer.seek(0)
-        img = PIL.Image.open(buffer)
 
-        # Prompt - Updated for structured treatment response
+        # Save uploaded image
+        image_filename = f"scan_{uuid.uuid4().hex}.jpg"
+        image_path = os.path.join(
+            UPLOAD_FOLDER,
+            image_filename
+        )
+
+        with open(image_path, "wb") as image_output:
+            image_output.write(buffer.getvalue())
+
+        # Configure Gemini
+        model = get_gemini_model()
+
+        # Plant analysis prompt
         prompt = """
-        Analyze this image of a plant leaf. Return a JSON object with the following fields:
-        1. plantName: The name of the plant (e.g., "Tomato", "Potato", "Pepper").
-        2. disease: The name of the disease or "Healthy" if no disease is found.
-        3. confidence: A percentage string (e.g., "95%") indicating confidence in the diagnosis.
-        4. health_score: A number from 0 to 100 representing the plant's health (100 is perfectly healthy).
-        5. isUnknown: Boolean, set to true ONLY if the image is clearly NOT a plant.
-        6. precautions: An array of 4-5 precaution strings that should be followed (e.g., ["Remove infected leaves immediately", "Avoid overhead watering"]).
-        7. organic_manures: An array of 3-4 organic treatment recommendations with details (e.g., ["Neem Cake: Apply 100-150g per plant", "Vermicompost: Apply 500g per plant"]).
-        8. inorganic_manures: An array of 2-3 chemical/inorganic treatment recommendations (e.g., ["Mancozeb 75% WP: 2.5g per liter water", "Copper Oxychloride: 3g per liter"]).
-        
-        If the plant is healthy, provide general care tips in precautions and preventive treatments in organic/inorganic sections.
-        
-        Output ONLY the raw JSON string, no markdown formatting.
-        """
-        
-        # List of models to try in order of preference (Based on actual available models in logs)
+You are PlantCare AI, an agricultural plant-health assistant.
+
+Analyze the supplied plant image and return ONLY a valid JSON object.
+
+Use exactly these fields:
+
+{
+  "plantName": "Name of plant",
+  "disease": "Disease name, Healthy, or Uncertain",
+  "confidence": "85%",
+  "health_score": 75,
+  "isUnknown": false,
+  "precautions": [
+    "Precaution 1",
+    "Precaution 2",
+    "Precaution 3",
+    "Precaution 4"
+  ],
+  "organic_manures": [
+    "Organic treatment 1",
+    "Organic treatment 2",
+    "Organic treatment 3"
+  ],
+  "inorganic_manures": [
+    "Chemical treatment 1",
+    "Chemical treatment 2"
+  ]
+}
+
+Rules:
+
+1. health_score must be an integer from 0 to 100.
+2. confidence must be a percentage string.
+3. isUnknown must be true only if the image clearly does not
+   contain a plant or plant leaf.
+4. If the disease cannot be determined, return "Uncertain".
+5. Never invent a disease when the image is unclear.
+6. If the plant is healthy, give general plant-care advice.
+7. Give practical precaution and treatment suggestions.
+8. Avoid claiming that a treatment is guaranteed to work.
+9. For chemical treatments, advise following the product label
+   and local agricultural expert recommendations.
+10. Return raw JSON only. Do not use Markdown code fences.
+"""
+
+        # Attempt Gemini models in order.
+        # If one is unavailable, try the next one.
         models_to_try = [
-           'gemini-2.5-flash-lite',
-           'gemini-2.5-flash'
+            GEMINI_MODEL,
+            "gemini-2.5-flash-lite"
         ]
-        
+
         gemini_response = None
         last_error = None
         used_model = None
 
-        print("--- Starting Model Attempt Loop ---")
-        for model_name in models_to_try:
+        # Correct indentation: this loop and its following
+        # if statement belong to the api_analyze try block.
+        for model_name in dict.fromkeys(models_to_try):
+
             try:
-                print(f"Trying model: {model_name}")
+
+                print(
+                    f"Trying Gemini model: {model_name}"
+                )
+
                 model = genai.GenerativeModel(model_name)
-                gemini_response = model.generate_content([prompt, img])
-                used_model = model_name
-                print(f"Success with model: {model_name}")
-                break
-            except Exception as e:
-                print(f"Failed with {model_name}: {e}")
-                last_error = e
-                continue
-        
-               if not gemini_response:
-            print("All models failed. Checking available models:")
 
-            try:
-                available_models = list(genai.list_models())
+                gemini_response = model.generate_content(
+                    [prompt, img],
+                    generation_config={
+                        "temperature": 0.2,
+                        "response_mime_type": "application/json"
+                    }
+                )
 
-                if not available_models:
-                    print("No models returned by the API.")
-
-                for m in available_models:
-                    print(
-                        f"Model: {m.name} | "
-                        f"Methods: {m.supported_generation_methods}"
+                if not getattr(
+                    gemini_response, "text", None
+                ):
+                    raise RuntimeError(
+                        "Gemini returned an empty response"
                     )
 
-            except Exception as model_error:
-                print(f"Could not list models: {model_error}")
+                used_model = model_name
 
-            raise last_error or Exception("All models failed")
+                print(
+                    f"Gemini succeeded with {model_name}"
+                )
 
-        # Debug Logging
-        print("Debugging Gemini Response:")
-        try:
-            print(f"Safety Ratings: {gemini_response.prompt_feedback}")
-        except:
-            pass
-            
-        try:
-            text_response = gemini_response.text.strip()
-            print(f"Raw Text Response: {text_response}")
-        except Exception as e:
-             print(f"Error accessing .text: {e}")
-             if gemini_response.candidates and gemini_response.candidates[0].finish_reason:
-                 return jsonify({"success": False, "error": f"Image blocked due to safety filters ({gemini_response.candidates[0].finish_reason})"})
-             return jsonify({"success": False, "error": "No text returned from AI"})
+                break
 
-        # Clean up any markdown formatting if present
-        if text_response.startswith('```json'):
+            except Exception as error:
+
+                print(
+                    f"Gemini model {model_name} failed: {error}"
+                )
+
+                last_error = error
+                gemini_response = None
+
+        # This condition is correctly aligned with the for loop.
+        if gemini_response is None:
+
+            print("All configured Gemini models failed.")
+
+            # Diagnostic information in Render logs
+            try:
+
+                for available_model in genai.list_models():
+
+                    print(
+                        "Available model:",
+                        available_model.name,
+                        "Methods:",
+                        available_model.supported_generation_methods
+                    )
+
+            except Exception as listing_error:
+
+                print(
+                    "Could not list Gemini models:",
+                    listing_error
+                )
+
+            raise RuntimeError(
+                f"Gemini analysis failed: {last_error}"
+            )
+
+        # Parse Gemini response
+        text_response = gemini_response.text.strip()
+
+        # Remove Markdown fences if returned despite the prompt
+        if text_response.startswith("```json"):
             text_response = text_response[7:]
-        if text_response.endswith('```'):
+
+        elif text_response.startswith("```"):
+            text_response = text_response[3:]
+
+        if text_response.endswith("```"):
             text_response = text_response[:-3]
-            
+
+        text_response = text_response.strip()
+
+        result = json.loads(text_response)
+
+        if not isinstance(result, dict):
+            raise ValueError(
+                "Gemini did not return a JSON object"
+            )
+
+        # Ensure frontend-required fields exist
+        result.setdefault("plantName", "Unknown")
+        result.setdefault("disease", "Uncertain")
+        result.setdefault("confidence", "0%")
+        result.setdefault("health_score", 0)
+        result.setdefault("isUnknown", False)
+        result.setdefault("precautions", [])
+        result.setdefault("organic_manures", [])
+        result.setdefault("inorganic_manures", [])
+
         try:
-            result = json.loads(text_response)
-            result['success'] = True
-            result['used_model'] = used_model 
-        except json.JSONDecodeError as je:
-            print(f"JSON Decode Error: {je}")
-            return jsonify({"success": False, "error": f"Failed to parse AI response: {str(je)}"})
+            result["health_score"] = max(
+                0,
+                min(100, int(result["health_score"]))
+            )
+        except (ValueError, TypeError):
+            result["health_score"] = 0
 
-        # Prepare consolidated treatment string for database
-        precautions = result.get('precautions', [])
-        organic = result.get('organic_manures', [])
-        inorganic = result.get('inorganic_manures', [])
-        
-        treatment_summary = "Precautions:\n" + "\n".join(f"- {p}" for p in precautions)
-        treatment_summary += "\n\nOrganic Manures:\n" + "\n".join(f"- {o}" for o in organic)
-        treatment_summary += "\n\nInorganic Manures:\n" + "\n".join(f"- {i}" for i in inorganic)
+        for field in [
+            "precautions",
+            "organic_manures",
+            "inorganic_manures"
+        ]:
+            if not isinstance(result[field], list):
+                result[field] = []
 
-        # Save to database
-        user_id = session.get('user_id')
+        # Prepare treatment summary for database
+        precautions = result["precautions"]
+        organic = result["organic_manures"]
+        inorganic = result["inorganic_manures"]
+
+        treatment_summary = (
+            "Precautions:\n"
+            + "\n".join(f"- {item}" for item in precautions)
+            + "\n\nOrganic Manures:\n"
+            + "\n".join(f"- {item}" for item in organic)
+            + "\n\nInorganic Manures:\n"
+            + "\n".join(f"- {item}" for item in inorganic)
+        )
+
+        # Save diagnosis
         save_diagnosis(
-            user_id=user_id,
-            plant_name=result.get('plantName', 'Unknown'),
-            disease=result.get('disease', 'Unknown'),
-            confidence=result.get('confidence', '0%'),
+            user_id=session.get("user_id"),
+            plant_name=result.get("plantName", "Unknown"),
+            disease=result.get("disease", "Uncertain"),
+            confidence=result.get("confidence", "0%"),
             treatment=treatment_summary,
             image_path=image_path,
-            health_score=result.get('health_score'),
-            is_unknown=result.get('isUnknown', False)
+            health_score=result["health_score"],
+            is_unknown=result.get("isUnknown", False)
         )
-        
+
+        result["success"] = True
+        result["used_model"] = used_model
+
         return jsonify(result)
 
-    except Exception as e:
-        print(f"Analysis Error Exception: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({"success": False, "error": str(e)})
+    except json.JSONDecodeError as error:
 
-@app.route('/api/history', methods=['GET'])
+        print("Gemini returned invalid JSON:", error)
+        traceback.print_exc()
+
+        return jsonify({
+            "success": False,
+            "error": "Gemini returned an invalid response. Please try again."
+        }), 502
+
+    except Exception as error:
+
+        print("Plant analysis error:", error)
+        traceback.print_exc()
+
+        return jsonify({
+            "success": False,
+            "error": (
+                "Plant analysis failed. Check the Render logs "
+                "for the exact Gemini API error."
+            )
+        }), 500
+
+
+# --------------------------------------------------
+# DIAGNOSIS HISTORY
+# --------------------------------------------------
+
+@app.route("/api/history", methods=["GET"])
 @login_required
 def api_history():
-    """Get diagnosis history from database"""
-    user_id = session.get('user_id')
-    history = get_diagnosis_history(user_id, limit=20)
-    return jsonify({"success": True, "history": history})
 
-@app.route('/api/stats', methods=['GET'])
+    history = get_diagnosis_history(
+        session.get("user_id"),
+        limit=20
+    )
+
+    return jsonify({
+        "success": True,
+        "history": history
+    })
+
+
+# --------------------------------------------------
+# DIAGNOSIS STATISTICS
+# --------------------------------------------------
+
+@app.route("/api/stats", methods=["GET"])
 @login_required
 def api_stats():
-    """Get diagnosis statistics"""
-    user_id = session.get('user_id')
-    stats = get_diagnosis_stats(user_id)
-    return jsonify({"success": True, "stats": stats})
 
-@app.route('/api/chat', methods=['POST'])
+    stats = get_diagnosis_stats(
+        session.get("user_id")
+    )
+
+    return jsonify({
+        "success": True,
+        "stats": stats
+    })
+
+
+# --------------------------------------------------
+# GEMINI PLANT DOCTOR CHAT
+# --------------------------------------------------
+
+@app.route("/api/chat", methods=["POST"])
 @login_required
 def api_chat():
-    """Chat endpoint with database storage"""
-    data = request.json
-    message = data.get('message', '')
-    
-    # Gemini Chat Integration
+
+    data = request.get_json(silent=True) or {}
+
+    message = data.get("message", "").strip()
+
+    if not message:
+        return jsonify({
+            "success": False,
+            "error": "Please enter a message."
+        }), 400
+
     try:
-        import google.generativeai as genai
-        import os
-        from dotenv import load_dotenv
-        
-        load_dotenv()
-        api_key = os.getenv('GEMINI_API_KEY')
-        
-        if api_key:
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-1.5-flash')
-            
-            # Plant Expert Persona - Relaxed
-            prompt = f"""You are a helpful and knowledgeable Plant Expert AI. 
-            User's question: {message}
-            
-            Provide a helpful, accurate, and friendly response. 
-            You can give detailed advice but keep it easy to understand.
-            If the question is not about plants, gardening, or agriculture, politely steer the conversation back to plants.
-            """
-            
-            gemini_response = model.generate_content(prompt)
-            response = gemini_response.text
-        else:
-            response = "Error: Gemini API key not configured."
-            
-    except Exception as e:
-        print(f"Gemini Error: {str(e)}")
-        # Fallback to simple logic if API fails
-        response = "I'm having trouble connecting to my AI brain right now. Please try again in a moment."
 
-    # Save to database
-    user_id = session.get('user_id')
-    save_chat(user_id, message, response)
-    
-    return jsonify({"success": True, "response": response})
+        model = get_gemini_model()
 
-if __name__ == '__main__':
-    print("🌿 PlantCare AI Server Starting...")
-    print("🔐 Authentication: Enabled")
-    print("📱 Open http://localhost:5000 in your browser")
-    print("📱 For mobile: http://<your-ip>:5000")
-    print("💾 Database: SQLite (plantcare.db)")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+        # Use the user's selected language
+        language = session.get("language", "en")
+
+        language_names = {
+            "en": "English",
+            "hi": "Hindi",
+            "mr": "Marathi"
+        }
+
+        response_language = language_names.get(
+            language,
+            "English"
+        )
+
+        prompt = f"""
+You are PlantCare AI, a helpful plant-health expert.
+
+Reply in {response_language}.
+
+Use simple, friendly language that farmers and students
+can easily understand.
+
+Give practical advice about plants, diseases, gardening,
+crop care, and agriculture.
+
+When recommending chemical treatments, advise the user
+to follow product labels and local agricultural guidance.
+
+Do not claim that an uncertain diagnosis is confirmed.
+
+If the user asks something unrelated to plants or agriculture,
+politely guide the conversation back to those topics.
+
+User's question:
+{message}
+"""
+
+        response = model.generate_content(
+            prompt,
+            generation_config={
+                "temperature": 0.4
+            }
+        )
+
+        answer = (
+            response.text.strip()
+            if getattr(response, "text", None)
+            else ""
+        )
+
+        if not answer:
+            return jsonify({
+                "success": False,
+                "error": "Gemini returned an empty response."
+            }), 502
+
+        save_chat(
+            session.get("user_id"),
+            message,
+            answer
+        )
+
+        return jsonify({
+            "success": True,
+            "response": answer
+        })
+
+    except Exception as error:
+
+        print("Gemini chat error:", error)
+        traceback.print_exc()
+
+        return jsonify({
+            "success": False,
+            "error": (
+                "PlantCare AI could not connect to Gemini. "
+                "Check the API key, model availability, quota, "
+                "and Render logs."
+            )
+        }), 500
+
+
+# --------------------------------------------------
+# RUN APPLICATION LOCALLY
+# --------------------------------------------------
+
+if __name__ == "__main__":
+
+    print("PlantCare AI server starting...")
+    print("Authentication: Enabled")
+    print("Gemini model:", GEMINI_MODEL)
+    print("Local URL: http://127.0.0.1:5000")
+
+    app.run(
+        debug=True,
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", "5000"))
+    )
