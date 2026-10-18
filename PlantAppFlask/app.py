@@ -56,10 +56,7 @@ import google.generativeai as genai
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Set this in Render if you want to change the model.
-GEMINI_MODEL = os.getenv(
-    "GEMINI_MODEL",
-    "gemini-2.5-flash"
-)
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
@@ -415,11 +412,10 @@ Rules:
 
         # Attempt Gemini models in order.
         # If one is unavailable, try the next one.
-        models_to_try = [
-            GEMINI_MODEL,
-            "gemini-2.5-flash-lite"
-        ]
-
+       models_to_try = [
+    GEMINI_MODEL,
+    "gemini-3.5-flash"
+]
         gemini_response = None
         last_error = None
         used_model = None
