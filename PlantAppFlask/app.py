@@ -135,13 +135,6 @@ def home():
 def diagnosis():
     return render_template("diagnosis.html")
 
-@app.route('/set-language/<lang>')
-def set_language(lang):
-  if lang in ['en', 'hi', 'mr']:
-    session['language'] = lang
-    return redirect(request.referrer or url_for('home'))
-
-
 @app.route("/chat")
 @login_required
 def chat():
