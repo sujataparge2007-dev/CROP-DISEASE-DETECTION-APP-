@@ -125,50 +125,25 @@
             <i class="material-icons">menu</i>
         </button>
 
-        <!-- Header -->
+        <!-- Header (Prevents Overlap) -->
         <div class="header">
-
-            <div style="width: 10px;"></div>
-
-            <h1 class="header-title" data-i18n="diagnosisTitle">
-                Plant Diagnosis
-            </h1>
-
-            <!-- Language Selector -->
-            <div class="language-control">
+            <div class="header-left-space"></div>
+            <h1 class="header-title" data-i18n="diagnosisTitle">Plant Diagnosis</h1>
+            <div class="header-actions">
                 <select id="languageSelect"
+                        class="language-select"
                         aria-label="Choose language"
                         onchange="changeLanguage(this.value)">
-
-                    <option value="en"
-                        {% if session.get('language', 'en') == 'en' %}
-                            selected
-                        {% endif %}>
-                        English
-                    </option>
-
-                    <option value="hi"
-                        {% if session.get('language') == 'hi' %}
-                            selected
-                        {% endif %}>
-                        हिन्दी
-                    </option>
-
-                    <option value="mr"
-                        {% if session.get('language') == 'mr' %}
-                            selected
-                        {% endif %}>
-                        मराठी
-                    </option>
-
+                    <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>English</option>
+                    <option value="hi" {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>हिन्दी</option>
+                    <option value="mr" {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>मराठी</option>
                 </select>
+                <button class="header-btn"
+                        onclick="window.location.href='/history'"
+                        aria-label="History">
+                    <i class="material-icons">history</i>
+                </button>
             </div>
-
-            <button class="header-btn"
-                    onclick="window.location.href='/history'">
-                <i class="material-icons">history</i>
-            </button>
-
         </div>
 
         <!-- Image Preview -->

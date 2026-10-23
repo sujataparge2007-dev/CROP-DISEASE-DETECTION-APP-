@@ -1180,7 +1180,7 @@ body {
 
 /* Multilingual typography and wrap fixes */
 body, button, input, select, textarea {
-    font-family: "Noto Sans Devanagari", "Nirmala UI", "Mangal", "Poppins", Arial, sans-serif;
+    font-family: "Poppins", "Noto Sans Devanagari", "Nirmala UI", "Mangal", Arial, sans-serif;
 }
 
 .result-value,

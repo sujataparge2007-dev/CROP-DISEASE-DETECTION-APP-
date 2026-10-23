@@ -474,21 +474,7 @@
             }
         });
 
-        // 4. Translate text nodes safely
-        var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-        var nodes = [];
-        while (walker.nextNode()) {
-            nodes.push(walker.currentNode);
-        }
-
-        nodes.forEach(function (node) {
-            var val = node.nodeValue.trim();
-            if (val && dict[val]) {
-                node.nodeValue = node.nodeValue.replace(val, dict[val]);
-            }
-        });
-
-        // 5. Sync all language dropdowns on the page
+        // 4. Sync all language dropdowns on the page
         document.querySelectorAll("select#languageSelect, select.language-select, select#sidebarLangSelect").forEach(function (select) {
             select.value = language;
         });
