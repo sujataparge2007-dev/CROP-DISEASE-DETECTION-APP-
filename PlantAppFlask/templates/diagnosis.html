@@ -1,414 +1,752 @@
 <!DOCTYPE html>
-<html lang="{{ session.get('lang', 'en') }}">
+<html lang="{{ session.get('language', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PlantCare AI - Diagnosis</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet">
+
+    <style>
+        .result-value,
+        .result-label,
+        .treatment-section h3,
+        .tab-btn,
+        .tab-content h4,
+        .tab-content li,
+        .action-title,
+        .image-preview p {
+            overflow-wrap: anywhere;
+            word-break: normal;
+            line-height: 1.6;
+        }
+
+        .tab-content {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .tab-content ul {
+            padding-left: 20px;
+        }
+
+        .tab-btn {
+            font-size: 13px;
+            letter-spacing: -0.2px;
+        }
+
+        @media (max-width: 480px) {
+            .tab-btn {
+                font-size: 11.5px;
+                padding: 10px 4px !important;
+            }
+        }
+    </style>
 </head>
+
 <body>
+
     <!-- Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar-overlay"
+         id="sidebarOverlay"
+         onclick="toggleSidebar()"></div>
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
+
         <div class="sidebar-header">
             <div class="sidebar-logo">
                 <i class="material-icons">eco</i>
             </div>
             <h2 style="font-size: 20px;">PlantCare AI</h2>
         </div>
+
         <div class="sidebar-menu">
+
             <a href="/home" class="menu-item">
                 <i class="material-icons">home</i>
                 <span>Home</span>
             </a>
+
             <a href="/diagnosis" class="menu-item active">
                 <i class="material-icons">camera_alt</i>
                 <span>AI Diagnosis</span>
             </a>
+
             <a href="/chat" class="menu-item">
                 <i class="material-icons">chat</i>
                 <span>Plant Doctor</span>
             </a>
+
             <a href="/history" class="menu-item">
                 <i class="material-icons">history</i>
                 <span>History</span>
             </a>
+
+            <a href="/schemes" class="menu-item">
+                <i class="material-icons">agriculture</i>
+                <span data-i18n="schemesNav">Government Schemes</span>
+            </a>
+
             <a href="/about" class="menu-item">
                 <i class="material-icons">info</i>
-                <span>About App</span>
+                <span data-i18n="about">About App</span>
             </a>
-            <div style="border-top: 1px solid var(--gray-100); margin: 10px 0;"></div>
-            <a href="#" onclick="handleLogout()" class="menu-item">
+
+            <!-- Sidebar Language Picker -->
+            <div class="sidebar-language">
+                <label for="sidebarLangSelect" data-i18n="languageLabel">🌐 Language</label>
+                <select id="sidebarLangSelect" onchange="changeLanguage(this.value)">
+                    <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>English</option>
+                    <option value="hi" {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>हिन्दी (Hindi)</option>
+                    <option value="mr" {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>मराठी (Marathi)</option>
+                </select>
+            </div>
+
+            <div style="border-top: 1px solid var(--gray-100);
+                        margin: 10px 0;"></div>
+
+            <a href="#" onclick="handleLogout(); return false;"
+               class="menu-item">
                 <i class="material-icons">logout</i>
                 <span>Logout</span>
             </a>
+
         </div>
     </div>
 
     <div class="container">
-        <!-- Sidebar Toggle Button -->
+
+        <!-- Sidebar Toggle -->
         <button class="sidebar-btn" onclick="toggleSidebar()">
             <i class="material-icons">menu</i>
         </button>
+
         <!-- Header -->
         <div class="header">
-            <div style="width:40px;"></div>
-            <h1 class="header-title">Plant Diagnosis</h1>
-            <button class="header-btn" onclick="window.location.href='/history'">
+
+            <div style="width: 10px;"></div>
+
+            <h1 class="header-title" data-i18n="diagnosisTitle">
+                Plant Diagnosis
+            </h1>
+
+            <!-- Language Selector -->
+            <div class="language-control">
+                <select id="languageSelect"
+                        aria-label="Choose language"
+                        onchange="changeLanguage(this.value)">
+
+                    <option value="en"
+                        {% if session.get('language', 'en') == 'en' %}
+                            selected
+                        {% endif %}>
+                        English
+                    </option>
+
+                    <option value="hi"
+                        {% if session.get('language') == 'hi' %}
+                            selected
+                        {% endif %}>
+                        हिन्दी
+                    </option>
+
+                    <option value="mr"
+                        {% if session.get('language') == 'mr' %}
+                            selected
+                        {% endif %}>
+                        मराठी
+                    </option>
+
+                </select>
+            </div>
+
+            <button class="header-btn"
+                    onclick="window.location.href='/history'">
                 <i class="material-icons">history</i>
             </button>
+
         </div>
 
         <!-- Image Preview -->
         <div class="image-preview animate-fade-in" id="imagePreview">
             <i class="material-icons">add_photo_alternate</i>
-            <p>Select or capture a plant image</p>
+            <p data-i18n="selectImage">
+                Select or capture a plant image
+            </p>
         </div>
-        <input type="file" id="fileInput" accept="image/*" style="display:none;" onchange="handleImageSelect(event)">
+
+        <input type="file"
+               id="fileInput"
+               accept="image/*"
+               style="display:none;"
+               onchange="handleImageSelect(event)">
 
         <!-- Action Buttons -->
         <div class="action-buttons" id="actionButtons">
+
             <button class="action-card" onclick="takePhoto()">
                 <div class="action-icon">
                     <i class="material-icons">camera_alt</i>
                 </div>
-                <span class="action-title">Take Photo</span>
+                <span class="action-title" data-i18n="takePhoto">
+                    Take Photo
+                </span>
             </button>
+
             <button class="action-card" onclick="uploadFromGallery()">
                 <div class="action-icon">
                     <i class="material-icons">photo_library</i>
                 </div>
-                <span class="action-title">Upload from Gallery</span>
+                <span class="action-title" data-i18n="uploadGallery">
+                    Upload from Gallery
+                </span>
             </button>
+
         </div>
 
         <!-- Analyze Button -->
-        <button class="btn btn-primary btn-full" id="analyzeBtn" onclick="startAnalysis()">
+        <button class="btn btn-primary btn-full"
+                id="analyzeBtn"
+                onclick="startAnalysis()">
+
             <i class="material-icons">search</i>
-            Start AI Analysis
+            <span data-i18n="startAnalysis">Start AI Analysis</span>
+
         </button>
 
-        <!-- Results (hidden initially) -->
+        <!-- Results -->
         <div class="results-card hidden" id="resultsCard">
-            <h2 class="results-title">Diagnosis Results</h2>
-            
+
+            <h2 class="results-title" data-i18n="diagnosisResults">
+                Diagnosis Results
+            </h2>
+
             <div class="result-row">
-                <i class="material-icons" style="color:var(--dark-green);">local_florist</i>
+                <i class="material-icons"
+                   style="color:var(--dark-green);">local_florist</i>
+
                 <div>
-                    <p class="result-label">Plant Name</p>
-                    <p class="result-value" id="plantName">Tomato Leaf</p>
+                    <p class="result-label" data-i18n="plantNameLabel">
+                        Plant Name
+                    </p>
+                    <p class="result-value" id="plantName">-</p>
                 </div>
             </div>
-            
+
             <div class="result-row">
                 <i class="material-icons orange">warning</i>
+
                 <div>
-                    <p class="result-label">Disease Detected</p>
-                    <p class="result-value" id="diseaseName">Early Blight</p>
+                    <p class="result-label" data-i18n="diseaseDetected">
+                        Disease Detected
+                    </p>
+                    <p class="result-value" id="diseaseName">-</p>
                 </div>
             </div>
-            
+
             <div class="result-row">
                 <i class="material-icons green">check_circle</i>
+
                 <div>
-                    <p class="result-label">Confidence</p>
-                    <p class="result-value" id="confidence">95%</p>
+                    <p class="result-label" data-i18n="confidence">
+                        Confidence
+                    </p>
+                    <p class="result-value" id="confidence">-</p>
                 </div>
             </div>
-            
-            <!-- Precautions Section -->
-            <div class="treatment-section" style="background: linear-gradient(135deg, #fff3e0, #ffe0b2); border-radius: 15px; padding: 20px; margin-bottom: 15px;">
-                <h3 style="color: #e65100; font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+
+            <!-- Precautions -->
+            <div class="treatment-section"
+                 style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);
+                        border-radius:15px;padding:20px;margin-bottom:15px;">
+
+                <h3 style="color:#e65100;font-size:16px;
+                           margin-bottom:12px;display:flex;
+                           align-items:center;gap:8px;">
+
                     <i class="material-icons">warning</i>
-                    Precautions to be Followed
+
+                    <span data-i18n="precautions">
+                        Precautions to be Followed
+                    </span>
                 </h3>
-                <ul id="precautionsList" style="color: #bf360c; line-height: 1.8; font-size: 14px; padding-left: 20px; margin: 0;">
+
+                <ul id="precautionsList"
+                    style="color:#bf360c;line-height:1.8;
+                           font-size:14px;padding-left:20px;margin:0;">
                     <li>Loading...</li>
                 </ul>
+
             </div>
 
-            <!-- Tabs for Organic and Inorganic Manures -->
-            <div class="treatment-tabs" style="margin-bottom: 15px;">
-                <div class="tab-buttons" style="display: flex; border-radius: 10px; overflow: hidden; background: #e0e0e0;">
-                    <button id="organicTab" class="tab-btn active" onclick="switchTab('organic')" style="flex: 1; padding: 12px; border: none; background: #4CAF50; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s;">
-                        <i class="material-icons" style="font-size: 16px; vertical-align: middle;">eco</i>
-                        Organic Manures
+            <!-- Treatment Tabs -->
+            <div class="treatment-tabs" style="margin-bottom:15px;">
+
+                <div class="tab-buttons"
+                     style="display:flex;border-radius:10px;
+                            overflow:hidden;background:#e0e0e0;">
+
+                    <button id="organicTab"
+                            class="tab-btn active"
+                            onclick="switchTab('organic')"
+                            style="flex:1;padding:12px;border:none;
+                                   background:#4CAF50;color:white;
+                                   font-weight:600;cursor:pointer;">
+
+                        <i class="material-icons"
+                           style="font-size:16px;vertical-align:middle;">
+                            eco
+                        </i>
+
+                        <span data-i18n="organicManures">
+                            Organic Manures
+                        </span>
                     </button>
-                    <button id="inorganicTab" class="tab-btn" onclick="switchTab('inorganic')" style="flex: 1; padding: 12px; border: none; background: #e0e0e0; color: #666; font-weight: 600; cursor: pointer; transition: all 0.3s;">
-                        <i class="material-icons" style="font-size: 16px; vertical-align: middle;">science</i>
-                        Inorganic Manures
+
+                    <button id="inorganicTab"
+                            class="tab-btn"
+                            onclick="switchTab('inorganic')"
+                            style="flex:1;padding:12px;border:none;
+                                   background:#e0e0e0;color:#666;
+                                   font-weight:600;cursor:pointer;">
+
+                        <i class="material-icons"
+                           style="font-size:16px;vertical-align:middle;">
+                            science
+                        </i>
+
+                        <span data-i18n="inorganicManures">
+                            Inorganic Manures
+                        </span>
                     </button>
+
                 </div>
             </div>
 
-            <!-- Organic Manures Content -->
-            <div id="organicContent" class="tab-content" style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9); border-radius: 15px; padding: 20px; display: block;">
-                <h4 style="color: #2e7d32; font-size: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <!-- Organic Treatments -->
+            <div id="organicContent"
+                 class="tab-content"
+                 style="background:linear-gradient(135deg,#e8f5e9,#c8e6c9);
+                        border-radius:15px;padding:20px;display:block;">
+
+                <h4 style="color:#2e7d32;font-size:15px;
+                           margin-bottom:12px;display:flex;
+                           align-items:center;gap:8px;">
+
                     <i class="material-icons">spa</i>
-                    जैविक खाद (Organic Treatments)
+
+                    <span data-i18n="organicTreatments">
+                        Organic Treatments
+                    </span>
                 </h4>
-                <ul id="organicList" style="color: #1b5e20; line-height: 1.8; font-size: 14px; padding-left: 20px; margin: 0;">
+
+                <ul id="organicList"
+                    style="color:#1b5e20;line-height:1.8;
+                           font-size:14px;padding-left:20px;margin:0;">
                     <li>Loading...</li>
                 </ul>
+
             </div>
 
-            <!-- Inorganic Manures Content -->
-            <div id="inorganicContent" class="tab-content" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-radius: 15px; padding: 20px; display: none;">
-                <h4 style="color: #1565c0; font-size: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <!-- Inorganic Treatments -->
+            <div id="inorganicContent"
+                 class="tab-content"
+                 style="background:linear-gradient(135deg,#e3f2fd,#bbdefb);
+                        border-radius:15px;padding:20px;display:none;">
+
+                <h4 style="color:#1565c0;font-size:15px;
+                           margin-bottom:12px;display:flex;
+                           align-items:center;gap:8px;">
+
                     <i class="material-icons">science</i>
-                    रासायनिक खाद (Chemical Treatments)
+
+                    <span data-i18n="chemicalTreatments">
+                        Chemical Treatments
+                    </span>
                 </h4>
-                <ul id="inorganicList" style="color: #0d47a1; line-height: 1.8; font-size: 14px; padding-left: 20px; margin: 0;">
+
+                <ul id="inorganicList"
+                    style="color:#0d47a1;line-height:1.8;
+                           font-size:14px;padding-left:20px;margin:0;">
                     <li>Loading...</li>
                 </ul>
+
             </div>
-            
+
+            <!-- Plant Doctor -->
             <a href="/chat" class="btn btn-primary btn-full mb-20">
                 <i class="material-icons">chat</i>
-                Chat with Plant Doctor
+                <span data-i18n="chatDoctor">Chat with Plant Doctor</span>
             </a>
-            
-            <button class="btn btn-outline btn-full" onclick="resetDiagnosis()">
+
+            <!-- Diagnose Again -->
+            <button class="btn btn-outline btn-full"
+                    onclick="resetDiagnosis()">
+
                 <i class="material-icons">refresh</i>
-                Diagnose Another Plant
+
+                <span data-i18n="diagnoseAnother">
+                    Diagnose Another Plant
+                </span>
+
             </button>
+
         </div>
     </div>
 
     <script>
         let selectedFile = null;
 
+        // Text used by the diagnosis page.
+        const diagnosisText = {
+            en: {
+                selectImage: "Select or capture a plant image",
+                takePhoto: "Take Photo",
+                uploadGallery: "Upload from Gallery",
+                startAnalysis: "Start AI Analysis",
+                analyzing: "Analyzing plant...",
+                diagnosisResults: "Diagnosis Results",
+                plantNameLabel: "Plant Name",
+                diseaseDetected: "Disease Detected",
+                confidence: "Confidence",
+                precautions: "Precautions to be Followed",
+                organicManures: "Organic Manures",
+                inorganicManures: "Inorganic Manures",
+                organicTreatments: "Organic Treatments",
+                chemicalTreatments: "Chemical Treatments",
+                chatDoctor: "Chat with Plant Doctor",
+                diagnoseAnother: "Diagnose Another Plant",
+                noPrecautions: "No specific precautions recommended.",
+                noOrganic: "Stay with general organic care.",
+                noChemical: "No chemical treatments recommended.",
+                chooseImage: "Please select or capture an image first!",
+                fileTooLarge: "Image is too large. Please choose a file under 10MB.",
+                sessionExpired: "Session expired. Please log in again.",
+                analysisFailed: "Analysis failed",
+                timeout: "Request timed out. The server took too long to respond.",
+                networkError: "Network connection failed. Please check your internet.",
+                diagnosisTitle: "Plant Diagnosis"
+            },
+
+            hi: {
+                selectImage: "पौधे की तस्वीर चुनें या खींचें",
+                takePhoto: "फोटो खींचें",
+                uploadGallery: "गैलरी से फोटो चुनें",
+                startAnalysis: "AI विश्लेषण शुरू करें",
+                analyzing: "पौधे का विश्लेषण हो रहा है...",
+                diagnosisResults: "जांच के परिणाम",
+                plantNameLabel: "पौधे का नाम",
+                diseaseDetected: "पहचानी गई बीमारी",
+                confidence: "विश्वसनीयता",
+                precautions: "आवश्यक सावधानियां",
+                organicManures: "जैविक खाद",
+                inorganicManures: "रासायनिक खाद",
+                organicTreatments: "जैविक उपचार",
+                chemicalTreatments: "रासायनिक उपचार",
+                chatDoctor: "प्लांट डॉक्टर से बात करें",
+                diagnoseAnother: "दूसरे पौधे की जांच करें",
+                noPrecautions: "कोई विशेष सावधानी उपलब्ध नहीं है।",
+                noOrganic: "सामान्य जैविक देखभाल जारी रखें।",
+                noChemical: "किसी रासायनिक उपचार की सिफारिश नहीं है।",
+                chooseImage: "कृपया पहले पौधे की तस्वीर चुनें।",
+                fileTooLarge: "तस्वीर 10MB से छोटी चुनें।",
+                sessionExpired: "आपका सत्र समाप्त हो गया है। कृपया फिर लॉगिन करें।",
+                analysisFailed: "विश्लेषण नहीं हो सका।",
+                timeout: "समय समाप्त हो गया। सर्वर ने देर लगाई।",
+                networkError: "इंटरनेट कनेक्शन जांचें।",
+                diagnosisTitle: "पौधों की जांच"
+            },
+
+            mr: {
+                selectImage: "वनस्पतीचा फोटो निवडा किंवा काढा",
+                takePhoto: "फोटो काढा",
+                uploadGallery: "गॅलरीमधून फोटो निवडा",
+                startAnalysis: "AI विश्लेषण सुरू करा",
+                analyzing: "वनस्पतीचे विश्लेषण सुरू आहे...",
+                diagnosisResults: "निदानाचे परिणाम",
+                plantNameLabel: "वनस्पतीचे नाव",
+                diseaseDetected: "आढळलेला रोग",
+                confidence: "विश्वासार्हता",
+                precautions: "घ्यावयाची काळजी",
+                organicManures: "सेंद्रिय खते",
+                inorganicManures: "रासायनिक खते",
+                organicTreatments: "सेंद्रिय उपचार",
+                chemicalTreatments: "रासायनिक उपचार",
+                chatDoctor: "प्लांट डॉक्टरशी बोला",
+                diagnoseAnother: "दुसऱ्या वनस्पतीचे निदान करा",
+                noPrecautions: "विशिष्ट काळजीच्या सूचना उपलब्ध नाहीत.",
+                noOrganic: "सामान्य सेंद्रिय निगा सुरू ठेवा.",
+                noChemical: "रासायनिक उपचारांची शिफारस नाही.",
+                chooseImage: "कृपया प्रथम वनस्पतीचा फोटो निवडा.",
+                fileTooLarge: "10MB पेक्षा लहान फोटो निवडा.",
+                sessionExpired: "सत्र संपले आहे. कृपया पुन्हा लॉगिन करा.",
+                analysisFailed: "विश्लेषण करता आले नाही.",
+                timeout: "वेळ संपली. सर्व्हरला प्रतिसाद देण्यास उशीर झाला.",
+                networkError: "इंटरनेट कनेक्शन तपासा.",
+                diagnosisTitle: "वनस्पतीचे निदान"
+            }
+        };
+
+        function currentLanguage() {
+            return document.getElementById("languageSelect")?.value
+                || document.documentElement.lang
+                || "en";
+        }
+
+        function t(key) {
+            const language = currentLanguage();
+            return diagnosisText[language]?.[key]
+                || diagnosisText.en[key]
+                || key;
+        }
+
         function takePhoto() {
-            const input = document.getElementById('fileInput');
-            input.setAttribute('capture', 'environment');
+            const input = document.getElementById("fileInput");
+            input.setAttribute("capture", "environment");
             input.click();
         }
 
         function uploadFromGallery() {
-            const input = document.getElementById('fileInput');
-            input.removeAttribute('capture');
+            const input = document.getElementById("fileInput");
+            input.removeAttribute("capture");
             input.click();
         }
 
         function handleImageSelect(event) {
             const file = event.target.files[0];
-            if (file) {
-                if (file.size > 10 * 1024 * 1024) {
-                    alert("Image/Video is too large (over 10MB). Please choose a smaller file.");
-                    return;
-                }
-                
-                selectedFile = file;
-                const imageUrl = URL.createObjectURL(file);
-                document.getElementById('imagePreview').innerHTML = `<img src="${imageUrl}" alt="Selected plant">`;
+
+            if (!file) return;
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert(t("fileTooLarge"));
+                event.target.value = "";
+                return;
             }
+
+            selectedFile = file;
+
+            const imageUrl = URL.createObjectURL(file);
+
+            document.getElementById("imagePreview").innerHTML =
+                `<img src="${imageUrl}" alt="Selected plant"
+                      style="max-width:100%;height:auto;">`;
         }
 
         async function startAnalysis() {
-            const btn = document.getElementById('analyzeBtn');
-            
+            const btn = document.getElementById("analyzeBtn");
+
             if (!selectedFile) {
-                alert('Please select or capture an image first!');
+                alert(t("chooseImage"));
                 return;
             }
-            
-            // Show loading state
-            btn.innerHTML = `
-                <i class="material-icons">hourglass_empty</i>
-                Analyzing plant...
-            `;
+
             btn.disabled = true;
+            btn.textContent = t("analyzing");
+
+            const formData = new FormData();
+            formData.append("image", selectedFile);
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(
+                () => controller.abort(),
+                60000
+            );
 
             try {
-                // Create form data with image
-                const formData = new FormData();
-                formData.append('image', selectedFile);
-
-                const startTime = Date.now();
-                // Call API with timeout signal
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-
-                const response = await fetch('/api/analyze', {
-                    method: 'POST',
+                const response = await fetch("/api/analyze", {
+                    method: "POST",
                     body: formData,
                     signal: controller.signal
                 });
-                
+
                 clearTimeout(timeoutId);
 
-                // Check for non-JSON response (e.g., HTML error page or login redirect)
                 const contentType = response.headers.get("content-type");
-                
+
                 if (!response.ok) {
-                     const text = await response.text();
-                     throw new Error(`Server returned ${response.status}: ${text.substring(0, 100)}`);
+                    throw new Error("Server returned status " + response.status);
                 }
 
                 if (!contentType || !contentType.includes("application/json")) {
-                    const text = await response.text();
-                    if (text.includes("Login") || text.includes("Sign In")) {
-                         alert("Session expired. Please log in again.");
-                         window.location.href = "/login";
-                         return;
-                    }
-                    throw new Error(`Response was not JSON (Status ${response.status}). Content: ${text.substring(0, 50)}...`);
+                    alert(t("sessionExpired"));
+                    window.location.href = "/login";
+                    return;
                 }
 
                 const data = await response.json();
 
-                if (data.success) {
-                    // Update results
-                    document.getElementById('plantName').textContent = data.plantName || 'Unknown';
-                    document.getElementById('diseaseName').textContent = data.disease || 'Unknown';
-                    document.getElementById('confidence').textContent = data.confidence || '0%';
-                    
-                    // Populate Precautions
-                    const precautionsList = document.getElementById('precautionsList');
-                    precautionsList.innerHTML = '';
-                    if (data.precautions && data.precautions.length > 0) {
-                        data.precautions.forEach(item => {
-                            const li = document.createElement('li');
-                            li.textContent = item;
-                            precautionsList.appendChild(li);
-                        });
-                    } else {
-                        precautionsList.innerHTML = '<li>No specific precautions recommended.</li>';
-                    }
+                if (!data.success) {
+                    alert(data.error || t("analysisFailed"));
+                    return;
+                }
 
-                    // Populate Organic Manures
-                    const organicList = document.getElementById('organicList');
-                    organicList.innerHTML = '';
-                    if (data.organic_manures && data.organic_manures.length > 0) {
-                        data.organic_manures.forEach(item => {
-                            const li = document.createElement('li');
-                            li.textContent = item;
-                            organicList.appendChild(li);
-                        });
-                    } else {
-                        organicList.innerHTML = '<li>Stay with general organic care.</li>';
-                    }
+                document.getElementById("plantName").textContent =
+                    data.plantName || "Unknown";
 
-                    // Populate Inorganic Manures
-                    const inorganicList = document.getElementById('inorganicList');
-                    inorganicList.innerHTML = '';
-                    if (data.inorganic_manures && data.inorganic_manures.length > 0) {
-                        data.inorganic_manures.forEach(item => {
-                            const li = document.createElement('li');
-                            li.textContent = item;
-                            inorganicList.appendChild(li);
-                        });
-                    } else {
-                        inorganicList.innerHTML = '<li>No chemical treatments recommended.</li>';
-                    }
-                    
-                    // Update disease icon color based on health
-                    const diseaseIcon = document.querySelector('#resultsCard .result-row:nth-child(2) i');
-                    if (data.disease === 'Healthy') {
-                        diseaseIcon.className = 'material-icons green';
-                        diseaseIcon.textContent = 'check_circle';
-                    } else if (data.isUnknown) {
-                        diseaseIcon.className = 'material-icons';
-                        diseaseIcon.style.color = '#9E9E9E';
-                        diseaseIcon.textContent = 'help_outline';
-                    } else {
-                        diseaseIcon.className = 'material-icons orange';
-                        diseaseIcon.textContent = 'warning';
-                    }
-                    
-                    // Show results
-                    document.getElementById('actionButtons').classList.add('hidden');
-                    document.getElementById('analyzeBtn').classList.add('hidden');
-                    document.getElementById('resultsCard').classList.remove('hidden');
+                document.getElementById("diseaseName").textContent =
+                    data.disease || "Uncertain";
+
+                document.getElementById("confidence").textContent =
+                    data.confidence || "0%";
+
+                fillList(
+                    "precautionsList",
+                    data.precautions,
+                    t("noPrecautions")
+                );
+
+                fillList(
+                    "organicList",
+                    data.organic_manures,
+                    t("noOrganic")
+                );
+
+                fillList(
+                    "inorganicList",
+                    data.inorganic_manures,
+                    t("noChemical")
+                );
+
+                const diseaseIcon = document.querySelector(
+                    "#resultsCard .result-row:nth-child(2) i"
+                );
+
+                if (data.isUnknown) {
+                    diseaseIcon.className = "material-icons";
+                    diseaseIcon.style.color = "#9E9E9E";
+                    diseaseIcon.textContent = "help_outline";
+                } else if (
+                    (data.disease || "").toLowerCase() === "healthy"
+                ) {
+                    diseaseIcon.className = "material-icons green";
+                    diseaseIcon.textContent = "check_circle";
                 } else {
-                    alert('Server Error: ' + (data.error || 'Analysis failed'));
-                    btn.innerHTML = `
-                        <i class="material-icons">search</i>
-                        Start AI Analysis
-                    `;
-                    btn.disabled = false;
+                    diseaseIcon.className = "material-icons orange";
+                    diseaseIcon.textContent = "warning";
                 }
+
+                document.getElementById("actionButtons")
+                    .classList.add("hidden");
+
+                btn.classList.add("hidden");
+
+                document.getElementById("resultsCard")
+                    .classList.remove("hidden");
+
             } catch (error) {
-                console.error('Analysis error:', error);
-                
-                let errorMsg = error.message;
-                if (error.name === 'AbortError') {
-                    errorMsg = "Request timeout. Server took too long to respond.";
+                console.error("Analysis error:", error);
+
+                if (error.name === "AbortError") {
+                    alert(t("timeout"));
                 } else if (error.message.includes("Failed to fetch")) {
-                    errorMsg = "Network connection failed. Please check your internet.";
+                    alert(t("networkError"));
+                } else {
+                    alert(error.message || t("analysisFailed"));
                 }
-                
-                alert('DEBUG ERROR (' + (new Date()).toLocaleTimeString() + '): ' + errorMsg);
-                
-                btn.innerHTML = `
-                    <i class="material-icons">search</i>
-                    Start AI Analysis
-                `;
+            } finally {
+                clearTimeout(timeoutId);
                 btn.disabled = false;
+                btn.innerHTML =
+                    '<i class="material-icons">search</i> ' +
+                    '<span data-i18n="startAnalysis">' +
+                    t("startAnalysis") +
+                    '</span>';
             }
+        }
+
+        function fillList(elementId, items, emptyMessage) {
+            const list = document.getElementById(elementId);
+            list.replaceChildren();
+
+            if (!Array.isArray(items) || items.length === 0) {
+                const li = document.createElement("li");
+                li.textContent = emptyMessage;
+                list.appendChild(li);
+                return;
+            }
+
+            items.forEach(item => {
+                const li = document.createElement("li");
+                li.textContent = item;
+                list.appendChild(li);
+            });
         }
 
         function resetDiagnosis() {
             selectedFile = null;
-            document.getElementById('fileInput').value = '';
-            document.getElementById('imagePreview').innerHTML = `
-                <i class="material-icons">add_photo_alternate</i>
-                <p>Select or capture a plant image</p>
-            `;
-            document.getElementById('actionButtons').classList.remove('hidden');
-            document.getElementById('analyzeBtn').classList.remove('hidden');
-            document.getElementById('analyzeBtn').innerHTML = `
-                <i class="material-icons">search</i>
-                Start AI Analysis
-            `;
-            document.getElementById('analyzeBtn').disabled = false;
-            document.getElementById('resultsCard').classList.add('hidden');
+
+            document.getElementById("fileInput").value = "";
+
+            document.getElementById("imagePreview").innerHTML =
+                '<i class="material-icons">add_photo_alternate</i>' +
+                '<p>' + t("selectImage") + '</p>';
+
+            document.getElementById("actionButtons")
+                .classList.remove("hidden");
+
+            const btn = document.getElementById("analyzeBtn");
+
+            btn.classList.remove("hidden");
+            btn.disabled = false;
+            btn.innerHTML =
+                '<i class="material-icons">search</i> ' +
+                '<span data-i18n="startAnalysis">' +
+                t("startAnalysis") +
+                '</span>';
+
+            document.getElementById("resultsCard")
+                .classList.add("hidden");
         }
 
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('sidebarOverlay').classList.toggle('active');
+            document.getElementById("sidebar").classList.toggle("active");
+            document.getElementById("sidebarOverlay").classList.toggle("active");
         }
 
         function switchTab(tab) {
-            const organicBtn = document.getElementById('organicTab');
-            const inorganicBtn = document.getElementById('inorganicTab');
-            const organicContent = document.getElementById('organicContent');
-            const inorganicContent = document.getElementById('inorganicContent');
+            const organicBtn = document.getElementById("organicTab");
+            const inorganicBtn = document.getElementById("inorganicTab");
+            const organicContent = document.getElementById("organicContent");
+            const inorganicContent = document.getElementById("inorganicContent");
 
-            if (tab === 'organic') {
-                organicBtn.style.background = '#4CAF50';
-                organicBtn.style.color = 'white';
-                inorganicBtn.style.background = '#e0e0e0';
-                inorganicBtn.style.color = '#666';
-                organicContent.style.display = 'block';
-                inorganicContent.style.display = 'none';
+            if (tab === "organic") {
+                organicBtn.style.background = "#4CAF50";
+                organicBtn.style.color = "white";
+
+                inorganicBtn.style.background = "#e0e0e0";
+                inorganicBtn.style.color = "#666";
+
+                organicContent.style.display = "block";
+                inorganicContent.style.display = "none";
             } else {
-                inorganicBtn.style.background = '#1565c0';
-                inorganicBtn.style.color = 'white';
-                organicBtn.style.background = '#e0e0e0';
-                organicBtn.style.color = '#666';
-                inorganicContent.style.display = 'block';
-                organicContent.style.display = 'none';
+                inorganicBtn.style.background = "#1565c0";
+                inorganicBtn.style.color = "white";
+
+                organicBtn.style.background = "#e0e0e0";
+                organicBtn.style.color = "#666";
+
+                inorganicContent.style.display = "block";
+                organicContent.style.display = "none";
             }
         }
 
         async function handleLogout() {
             try {
-                await fetch('/api/logout', { method: 'POST' });
-                window.location.href = '/login';
+                await fetch("/api/logout", { method: "POST" });
             } catch (error) {
-                console.error('Logout error:', error);
-                window.location.href = '/login';
+                console.error("Logout error:", error);
             }
+
+            window.location.href = "/login";
         }
     </script>
-    <div style="text-align: center; color: #ccc; font-size: 10px; margin-top: 20px;">v1.1 Debug</div>
-    
-    <!-- Language Script Added Here -->
+
+    <!-- Existing language script -->
     <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+
 </body>
 </html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ session.get('lang', 'en') }}">
+<html lang="{{ session.get('language', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -53,14 +53,29 @@
                 <i class="material-icons">history</i>
                 <span>History</span>
             </a>
+            <a href="/schemes" class="menu-item">
+                <i class="material-icons">agriculture</i>
+                <span data-i18n="schemesNav">Government Schemes</span>
+            </a>
             <a href="/about" class="menu-item">
                 <i class="material-icons">info</i>
-                <span>About App</span>
+                <span data-i18n="about">About App</span>
             </a>
+
+            <!-- Sidebar Language Picker -->
+            <div class="sidebar-language">
+                <label for="sidebarLangSelect" data-i18n="languageLabel">🌐 Language</label>
+                <select id="sidebarLangSelect" onchange="changeLanguage(this.value)">
+                    <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>English</option>
+                    <option value="hi" {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>हिन्दी (Hindi)</option>
+                    <option value="mr" {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>मराठी (Marathi)</option>
+                </select>
+            </div>
+
             <div style="border-top: 1px solid var(--gray-100); margin: 10px 0;"></div>
-            <a href="#" onclick="handleLogout()" class="menu-item">
+            <a href="#" onclick="handleLogout(); return false;" class="menu-item">
                 <i class="material-icons">logout</i>
-                <span>Logout</span>
+                <span data-i18n="logout">Logout</span>
             </a>
         </div>
     </div>
@@ -70,11 +85,17 @@
         <button class="sidebar-btn" onclick="toggleSidebar()">
             <i class="material-icons">menu</i>
         </button>
-        <!-- Header -->
+        <!-- Header (Prevents Overlap) -->
         <div class="header">
-            <div style="width:40px;"></div>
-            <h1 class="header-title">History</h1>
-            <div style="width:40px;"></div>
+            <div class="header-left-space"></div>
+            <h1 class="header-title" data-i18n="historyTitle">History</h1>
+            <div class="header-actions">
+                <select id="languageSelect" class="language-select" onchange="changeLanguage(this.value)" aria-label="Select language">
+                    <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>English</option>
+                    <option value="hi" {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>हिन्दी</option>
+                    <option value="mr" {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>मराठी</option>
+                </select>
+            </div>
         </div>
 
         <!-- History Container -->

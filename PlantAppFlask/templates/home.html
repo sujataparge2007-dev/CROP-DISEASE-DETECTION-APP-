@@ -22,74 +22,76 @@
         <div class="sidebar-menu">
             <a href="/home" class="menu-item active">
                 <i class="material-icons">home</i>
-                <span>Home</span>
+                <span data-i18n="home">Home</span>
             </a>
             <a href="/diagnosis" class="menu-item">
                 <i class="material-icons">camera_alt</i>
-                <span>AI Diagnosis</span>
+                <span data-i18n="diagnosis">AI Diagnosis</span>
             </a>
             <a href="/chat" class="menu-item">
                 <i class="material-icons">chat</i>
-                <span>Plant Doctor</span>
+                <span data-i18n="chat">Plant Doctor</span>
+            </a>
+            <a href="/schemes" class="menu-item">
+                <i class="material-icons">agriculture</i>
+                <span data-i18n="schemesNav">Government Schemes</span>
             </a>
             <a href="/history" class="menu-item">
                 <i class="material-icons">history</i>
-                <span>History</span>
+                <span data-i18n="history">History</span>
             </a>
-            <a href="/schemes" class="menu-item">
-              <i class="material-icons">agriculture</i>
-              <span data-i18n="schemesNav">Government Schemes</span>
-            </a>
-
-            <div class="language-selector" style="padding: 12px 15px;">
-             <label for="languageSelect" data-i18n="languageLabel">
-                🌐 Language
-             </label>
-
-             <select id="languageSelect"
-               onchange="changeLanguage(this.value)"
-               style="width: 100%; padding: 8px; margin-top: 8px;">
-               <option value="en"
-               {% if session.get('language', 'en') == 'en' %}selected{% endif %}>
-                English
-                </option>
-                <option value="hi"
-                {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>
-               हिन्दी (Hindi)
-               </option>
-                <option value="mr"
-                {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>
-                मराठी (Marathi)
-                </option>
-               </select>
-            </div>
             <a href="/about" class="menu-item">
                 <i class="material-icons">info</i>
-                <span>About App</span>
+                <span data-i18n="about">About App</span>
             </a>
+
+            <!-- Sidebar Language Picker -->
+            <div class="sidebar-language">
+                <label for="sidebarLangSelect" data-i18n="languageLabel">🌐 Language</label>
+                <select id="sidebarLangSelect" onchange="changeLanguage(this.value)">
+                    <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>English</option>
+                    <option value="hi" {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>हिन्दी (Hindi)</option>
+                    <option value="mr" {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>मराठी (Marathi)</option>
+                </select>
+            </div>
+
             <div style="border-top: 1px solid var(--gray-100); margin: 10px 0;"></div>
-            <a href="#" onclick="handleLogout()" class="menu-item">
+            <a href="#" onclick="handleLogout(); return false;" class="menu-item">
                 <i class="material-icons">logout</i>
-                <span>Logout</span>
+                <span data-i18n="logout">Logout</span>
             </a>
         </div>
     </div>
 
+    <!-- Sidebar Toggle Button -->
+    <button class="sidebar-btn" onclick="toggleSidebar()" aria-label="Toggle navigation">
+        <i class="material-icons">menu</i>
+    </button>
+
     <div class="container">
-        <!-- Sidebar Toggle Button -->
-        <button class="sidebar-btn" onclick="toggleSidebar()">
-            <i class="material-icons">menu</i>
-        </button>
-        <!-- Header -->
+        <!-- Top Bar with Menu Space & Language Selector -->
+        <div class="header" style="margin-top: 5px; margin-bottom: 5px;">
+            <div class="header-left-space"></div>
+            <div style="flex: 1;"></div>
+            <div class="header-actions">
+                <select id="languageSelect" class="language-select" onchange="changeLanguage(this.value)" aria-label="Select language">
+                    <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>English</option>
+                    <option value="hi" {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>हिन्दी</option>
+                    <option value="mr" {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>मराठी</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Header / Logo -->
         <div class="logo-container animate-fade-in">
             <div class="logo-circle logo-large">
                 <i class="material-icons">eco</i>
             </div>
             <h1 class="app-name">PlantCare AI</h1>
-            <p class="tagline">Your Smart Plant Health Companion</p>
+            <p class="tagline" data-i18n="tagline">Your Smart Plant Health Companion</p>
             
             <div class="card mt-20" style="width:100%;">
-                <p style="text-align:center; line-height:1.6; color:var(--black);">
+                <p style="text-align:center; line-height:1.6; color:var(--black); margin:0;" data-i18n="homeIntro">
                     Instantly detect plant diseases and get expert remedies using advanced AI technology. Keep your plants healthy and thriving!
                 </p>
             </div>
@@ -97,63 +99,63 @@
             <!-- Logout Button -->
             <button onclick="handleLogout()" class="btn btn-outline" style="margin-top: 15px; padding: 10px 25px; border-radius: 25px;">
                 <i class="material-icons" style="font-size: 18px;">logout</i>
-                Logout
+                <span data-i18n="logout">Logout</span>
             </button>
         </div>
 
         <!-- Get Started Button -->
         <div style="text-align:center; margin: 30px 0;">
-            <a href="/diagnosis" class="btn btn-white" style="padding: 18px 40px; border-radius: 30px;">
-                Get Started
+            <a href="/diagnosis" class="btn btn-white" style="padding: 18px 40px; border-radius: 30px; text-decoration:none; display:inline-flex; align-items:center; gap:8px;">
+                <span data-i18n="getStarted">Get Started</span>
                 <i class="material-icons">eco</i>
             </a>
         </div>
 
         <!-- Key Features -->
-        <h2 class="section-title">Key Features</h2>
+        <h2 class="section-title" data-i18n="keyFeatures">Key Features</h2>
         <div class="features-grid animate-fade-in">
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="material-icons">camera_alt</i>
                 </div>
-                <h3 class="feature-title">Quick Scan</h3>
-                <p class="feature-desc">Capture or upload leaf images for instant analysis and Detection.</p>
+                <h3 class="feature-title" data-i18n="quickScan">Quick Scan</h3>
+                <p class="feature-desc" data-i18n="quickScanDesc">Capture or upload leaf images for instant analysis and detection.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="material-icons">eco</i>
                 </div>
-                <h3 class="feature-title">AI Detection</h3>
-                <p class="feature-desc">Advanced AI identifies diseases with 95% accuracy</p>
+                <h3 class="feature-title" data-i18n="aiDetection">AI Detection</h3>
+                <p class="feature-desc" data-i18n="aiDetectionDesc">Advanced AI identifies diseases with 95% accuracy</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="material-icons">healing</i>
                 </div>
-                <h3 class="feature-title">Smart Remedies</h3>
-                <p class="feature-desc">AI-powered treatment suggestions</p>
+                <h3 class="feature-title" data-i18n="smartRemedies">Smart Remedies</h3>
+                <p class="feature-desc" data-i18n="smartRemediesDesc">AI-powered treatment suggestions</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="material-icons">trending_up</i>
                 </div>
-                <h3 class="feature-title">Track Progress</h3>
-                <p class="feature-desc">Monitor plant recovery</p>
+                <h3 class="feature-title" data-i18n="trackProgress">Track Progress</h3>
+                <p class="feature-desc" data-i18n="trackProgressDesc">Monitor plant recovery</p>
             </div>
         </div>
 
         <!-- How It Works -->
         <div class="steps-card animate-fade-in">
-            <h2 class="steps-title">How It Works</h2>
+            <h2 class="steps-title" data-i18n="howItWorks">How It Works</h2>
             
             <div class="step-item">
                 <div class="step-number">1</div>
                 <div class="step-content">
                     <div class="step-header">
                         <i class="material-icons">camera_alt</i>
-                        <span class="step-title">Step 1</span>
+                        <span class="step-title" data-i18n="step1Title">Take a Photo</span>
                     </div>
-                    <p class="step-desc">Take a photo of your plant</p>
+                    <p class="step-desc" data-i18n="step1Desc">Snap a clear picture of the affected plant leaf</p>
                 </div>
             </div>
             
@@ -162,9 +164,9 @@
                 <div class="step-content">
                     <div class="step-header">
                         <i class="material-icons">speed</i>
-                        <span class="step-title">Step 2</span>
+                        <span class="step-title" data-i18n="step2Title">AI Analysis</span>
                     </div>
-                    <p class="step-desc">Our AI analyzes the disease</p>
+                    <p class="step-desc" data-i18n="step2Desc">Our AI scans the image and identifies the disease</p>
                 </div>
             </div>
             
@@ -173,26 +175,15 @@
                 <div class="step-content">
                     <div class="step-header">
                         <i class="material-icons">eco</i>
-                        <span class="step-title">Step 3</span>
+                        <span class="step-title" data-i18n="step3Title">Get Treatment</span>
                     </div>
-                    <p class="step-desc">Get expert recommendations</p>
-                </div>
-            </div>
-            
-            <div class="step-item">
-                <div class="step-number">4</div>
-                <div class="step-content">
-                    <div class="step-header">
-                        <i class="material-icons">trending_up</i>
-                        <span class="step-title">Step 4</span>
-                    </div>
-                    <p class="step-desc">Track recovery and improvements</p>
+                    <p class="step-desc" data-i18n="step3Desc">Receive detailed remedies and prevention tips</p>
                 </div>
             </div>
         </div>
 
         <!-- Why Choose -->
-        <h2 class="section-title">Why Choose PlantCare AI?</h2>
+        <h2 class="section-title" data-i18n="whyChoose">Why Choose PlantCare AI?</h2>
         
         <a href="/about" style="text-decoration: none; display: block;">
             <div class="benefit-card animate-fade-in clickable-card">
@@ -200,8 +191,8 @@
                     <i class="material-icons">speed</i>
                 </div>
                 <div class="benefit-content">
-                    <h3 class="benefit-title">Quick & Accurate Diagnosis</h3>
-                    <p class="benefit-desc">Get quick and precise plant disease identification</p>
+                    <h3 class="benefit-title" data-i18n="benefit1Title">Quick & Accurate Diagnosis</h3>
+                    <p class="benefit-desc" data-i18n="benefit1Desc">Get instant results with high accuracy</p>
                 </div>
             </div>
         </a>
@@ -209,11 +200,11 @@
         <a href="/about" style="text-decoration: none; display: block;">
             <div class="benefit-card animate-fade-in clickable-card">
                 <div class="benefit-icon">
-                    <i class="material-icons">eco</i>
+                    <i class="material-icons">storage</i>
                 </div>
                 <div class="benefit-content">
-                    <h3 class="benefit-title">Comprehensive Disease Database</h3>
-                    <p class="benefit-desc">95%+ accuracy rate</p>
+                    <h3 class="benefit-title" data-i18n="benefit2Title">Comprehensive Database</h3>
+                    <p class="benefit-desc" data-i18n="benefit2Desc">Covers hundreds of plant species and diseases</p>
                 </div>
             </div>
         </a>
@@ -224,8 +215,8 @@
                     <i class="material-icons">nature</i>
                 </div>
                 <div class="benefit-content">
-                    <h3 class="benefit-title">Eco-Friendly</h3>
-                    <p class="benefit-desc">Reduce chemical usage</p>
+                    <h3 class="benefit-title" data-i18n="benefit3Title">Eco-Friendly Solutions</h3>
+                    <p class="benefit-desc" data-i18n="benefit3Desc">Organic treatment recommendations</p>
                 </div>
             </div>
         </a>
@@ -236,8 +227,8 @@
                     <i class="material-icons">savings</i>
                 </div>
                 <div class="benefit-content">
-                    <h3 class="benefit-title">Save Money</h3>
-                    <p class="benefit-desc">Prevent crop losses</p>
+                    <h3 class="benefit-title" data-i18n="benefit4Title">Save Time & Money</h3>
+                    <p class="benefit-desc" data-i18n="benefit4Desc">Prevent crop losses</p>
                 </div>
             </div>
         </a>
@@ -246,15 +237,15 @@
         <div class="bottom-nav">
             <a href="/diagnosis" class="nav-item">
                 <i class="material-icons">camera_alt</i>
-                <span>Scan</span>
+                <span data-i18n="navScan">Scan</span>
             </a>
             <a href="/chat" class="nav-item">
                 <i class="material-icons">chat</i>
-                <span>Chat</span>
+                <span data-i18n="navChat">Chat</span>
             </a>
             <a href="/history" class="nav-item">
                 <i class="material-icons">history</i>
-                <span>History</span>
+                <span data-i18n="navHistory">History</span>
             </a>
         </div>
     </div>
@@ -268,11 +259,10 @@
         async function handleLogout() {
             try {
                 await fetch('/api/logout', { method: 'POST' });
-                window.location.href = '/login';
             } catch (error) {
                 console.error('Logout error:', error);
-                window.location.href = '/login';
             }
+            window.location.href = '/login';
         }
     </script>
     <script src="{{ url_for('static', filename='js/language.js') }}"></script>

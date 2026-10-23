@@ -1,189 +1,144 @@
 <!DOCTYPE html>
 <html lang="{{ session.get('language', 'en') }}">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title data-i18n="About PlantCare AI">About PlantCare AI</title>
-
+    <title data-i18n="aboutTitle">About PlantCare AI</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
     <style>
+        .about-wrap {
+            max-width: 600px;
+            margin: 0 auto;
+            padding-top: 10px;
+        }
+
+        .about-top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 18px 5px;
+            min-height: 48px;
+        }
+
         .about-header {
             text-align: center;
-            padding: 40px 20px;
+            padding: 20px 20px 30px;
             color: var(--white);
         }
 
         .about-content {
             background: var(--white);
             border-radius: 30px 30px 0 0;
-            padding: 30px 20px;
-            min-height: calc(100vh - 200px);
+            padding: 30px 22px;
+            min-height: calc(100vh - 220px);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
         }
 
         .info-section {
-            margin-bottom: 30px;
-            animation: slideUp 0.5s ease-out;
+            margin-bottom: 26px;
+            animation: slideUp 0.4s ease-out;
         }
 
         .info-header {
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
+            gap: 14px;
+            margin-bottom: 10px;
         }
 
         .info-icon {
-            width: 45px;
-            height: 45px;
+            width: 44px;
+            height: 44px;
             border-radius: 12px;
-            background: var(--gradient-start);
+            background: #e4f6e5;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--dark-green);
+            flex-shrink: 0;
         }
 
         .info-title {
-            font-size: 20px;
+            font-size: 19px;
             font-weight: 700;
             color: var(--dark-green);
+            margin: 0;
         }
 
         .info-text {
-            color: var(--text-gray);
-            line-height: 1.6;
-            font-size: 15px;
-        }
-
-        .back-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: var(--white);
-            background: rgba(255, 255, 255, 0.2);
-            padding: 10px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        /* Language selector */
-        .language-container {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 10px;
-            padding: 15px 20px 0;
-        }
-
-        .language-container label {
-            font-weight: 600;
-        }
-
-        .language-container select {
-            padding: 9px 12px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            background: white;
-            cursor: pointer;
-            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.65;
+            font-size: 14.5px;
+            margin: 0;
+            padding-left: 2px;
         }
 
         @keyframes slideUp {
             from {
-                transform: translateY(20px);
+                transform: translateY(15px);
                 opacity: 0;
             }
-
             to {
                 transform: translateY(0);
                 opacity: 1;
             }
         }
-
-        @media (max-width: 600px) {
-            .language-container {
-                padding-top: 60px;
-            }
-
-            .about-header {
-                padding: 25px 15px;
-            }
-
-            .about-content {
-                padding: 25px 15px;
-            }
-
-            .info-title {
-                font-size: 18px;
-            }
-        }
     </style>
 </head>
-
 <body>
-
     <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
-
         <div class="sidebar-header">
             <div class="sidebar-logo">
                 <i class="material-icons">eco</i>
             </div>
             <h2 style="font-size: 20px;">PlantCare AI</h2>
         </div>
-
         <div class="sidebar-menu">
-
             <a href="/home" class="menu-item">
                 <i class="material-icons">home</i>
                 <span data-i18n="home">Home</span>
             </a>
-
             <a href="/diagnosis" class="menu-item">
                 <i class="material-icons">camera_alt</i>
                 <span data-i18n="diagnosis">AI Diagnosis</span>
             </a>
-
             <a href="/chat" class="menu-item">
                 <i class="material-icons">chat</i>
                 <span data-i18n="chat">Plant Doctor</span>
             </a>
-
+            <a href="/schemes" class="menu-item">
+                <i class="material-icons">agriculture</i>
+                <span data-i18n="schemesNav">Government Schemes</span>
+            </a>
             <a href="/history" class="menu-item">
                 <i class="material-icons">history</i>
                 <span data-i18n="history">History</span>
             </a>
-
             <a href="/about" class="menu-item active">
                 <i class="material-icons">info</i>
                 <span data-i18n="about">About App</span>
             </a>
 
-            <!-- Government Schemes -->
-            <a href="/schemes" class="menu-item">
-                <i class="material-icons">agriculture</i>
-                <span data-i18n="schemesNav">Government Schemes</span>
-            </a>
+            <!-- Sidebar Language Picker -->
+            <div class="sidebar-language">
+                <label for="sidebarLangSelect" data-i18n="languageLabel">🌐 Language</label>
+                <select id="sidebarLangSelect" onchange="changeLanguage(this.value)">
+                    <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>English</option>
+                    <option value="hi" {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>हिन्दी (Hindi)</option>
+                    <option value="mr" {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>मराठी (Marathi)</option>
+                </select>
+            </div>
 
             <div style="border-top: 1px solid var(--gray-100); margin: 10px 0;"></div>
-
             <a href="#" onclick="handleLogout(); return false;" class="menu-item">
                 <i class="material-icons">logout</i>
                 <span data-i18n="logout">Logout</span>
             </a>
-
         </div>
     </div>
 
@@ -192,141 +147,104 @@
         <i class="material-icons">menu</i>
     </button>
 
-    <!-- Language Selector -->
-    <div class="language-container">
-        <label for="languageSelect" data-i18n="languageLabel">🌐 Language</label>
+    <div class="about-wrap">
+        <!-- Top Bar with Language Selector -->
+        <div class="about-top-bar">
+            <div class="header-left-space"></div>
+            <div>
+                <select class="language-select" id="languageSelect" onchange="changeLanguage(this.value)" aria-label="Select language">
+                    <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>English</option>
+                    <option value="hi" {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>हिन्दी</option>
+                    <option value="mr" {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>मराठी</option>
+                </select>
+            </div>
+        </div>
 
-        <select id="languageSelect"
-                onchange="changeLanguage(this.value)"
-                aria-label="Select language">
+        <!-- About Header -->
+        <div class="about-header">
+            <div class="logo-circle" style="margin: 0 auto 12px;">
+                <i class="material-icons">eco</i>
+            </div>
+            <h1 style="font-size: 26px; margin: 0 0 6px;" data-i18n="aboutTitle">
+                About PlantCare AI
+            </h1>
+            <p style="opacity: 0.92; margin: 0; font-size: 15px;" data-i18n="aboutSubtitle">
+                Your Comprehensive Plant Health Guide
+            </p>
+        </div>
 
-            <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>
-                English
-            </option>
+        <!-- About Content -->
+        <div class="about-content">
+            <!-- Section 1 -->
+            <div class="info-section">
+                <div class="info-header">
+                    <div class="info-icon">
+                        <i class="material-icons">speed</i>
+                    </div>
+                    <h2 class="info-title" data-i18n="aboutDiagnosisTitle">
+                        Quick & Accurate Diagnosis
+                    </h2>
+                </div>
+                <p class="info-text" data-i18n="aboutDiagnosisText">
+                    Our advanced AI models are trained on millions of leaf images to provide lightning-fast identification of diseases. Within seconds of uploading a photo, you receive a detailed report on what's affecting your plant.
+                </p>
+            </div>
 
-            <option value="hi" {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>
-                हिन्दी
-            </option>
+            <!-- Section 2 -->
+            <div class="info-section">
+                <div class="info-header">
+                    <div class="info-icon">
+                        <i class="material-icons">storage</i>
+                    </div>
+                    <h2 class="info-title" data-i18n="aboutDatabaseTitle">
+                        Comprehensive Database
+                    </h2>
+                </div>
+                <p class="info-text" data-i18n="aboutDatabaseText">
+                    We support a wide range of crops and ornamental plants. Our database is constantly updated with new diseases and treatment protocols, ensuring you always have access to the latest horticultural science.
+                </p>
+            </div>
 
-            <option value="mr" {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>
-                मराठी
-            </option>
+            <!-- Section 3 -->
+            <div class="info-section">
+                <div class="info-header">
+                    <div class="info-icon">
+                        <i class="material-icons">eco</i>
+                    </div>
+                    <h2 class="info-title" data-i18n="aboutEcoTitle">
+                        Eco-Friendly Solutions
+                    </h2>
+                </div>
+                <p class="info-text" data-i18n="aboutEcoText">
+                    We prioritize organic and environmentally friendly treatment recommendations. By identifying diseases early and precisely, we help you reduce the unnecessary use of broad-spectrum chemicals, protecting your soil and local ecosystem.
+                </p>
+            </div>
 
-        </select>
+            <!-- Section 4 -->
+            <div class="info-section">
+                <div class="info-header">
+                    <div class="info-icon">
+                        <i class="material-icons">savings</i>
+                    </div>
+                    <h2 class="info-title" data-i18n="aboutSavingsTitle">
+                        Save Time & Money
+                    </h2>
+                </div>
+                <p class="info-text" data-i18n="aboutSavingsText">
+                    Preventing crop failure is the best way to save money. By catching issues early, you can take action before the damage spreads, saving your investment and ensuring a bountiful harvest.
+                </p>
+            </div>
+
+            <!-- Start Diagnosis Button -->
+            <div style="text-align: center; margin-top: 35px; padding-bottom: 25px;">
+                <a href="/diagnosis" class="btn btn-primary btn-full" style="text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <span data-i18n="startScan">Start a New Scan</span>
+                    <i class="material-icons">camera_alt</i>
+                </a>
+            </div>
+        </div>
     </div>
 
-    <!-- About Header -->
-    <div class="about-header">
-
-        <div class="logo-circle" style="margin: 0 auto 15px;">
-            <i class="material-icons">eco</i>
-        </div>
-
-        <h1 style="font-size: 28px;" data-i18n="About PlantCare AI">
-            About PlantCare AI
-        </h1>
-
-        <p style="opacity: 0.9;" data-i18n="Your Comprehensive Plant Health Guide">
-            Your Comprehensive Plant Health Guide
-        </p>
-
-    </div>
-
-    <!-- About Content -->
-    <div class="about-content">
-
-        <!-- Section 1 -->
-        <div class="info-section">
-
-            <div class="info-header">
-                <div class="info-icon">
-                    <i class="material-icons">speed</i>
-                </div>
-
-                <h2 class="info-title" data-i18n="Quick & Accurate Diagnosis">
-                    Quick & Accurate Diagnosis
-                </h2>
-            </div>
-
-            <p class="info-text" data-i18n="aboutDiagnosisText">
-                Our advanced AI models are trained on millions of leaf images to provide lightning-fast identification of diseases. Within seconds of uploading a photo, you receive a detailed report on what's affecting your plant.
-            </p>
-
-        </div>
-
-        <!-- Section 2 -->
-        <div class="info-section">
-
-            <div class="info-header">
-                <div class="info-icon">
-                    <i class="material-icons">database</i>
-                </div>
-
-                <h2 class="info-title" data-i18n="aboutDatabaseTitle">
-                    Comprehensive Database
-                </h2>
-            </div>
-
-            <p class="info-text" data-i18n="aboutDatabaseText">
-                We support a wide range of crops and ornamental plants. Our database is constantly updated with new diseases and treatment protocols, ensuring you always have access to the latest horticultural science.
-            </p>
-
-        </div>
-
-        <!-- Section 3 -->
-        <div class="info-section">
-
-            <div class="info-header">
-                <div class="info-icon">
-                    <i class="material-icons">nature</i>
-                </div>
-
-                <h2 class="info-title" data-i18n="aboutEcoTitle">
-                    Eco-Friendly Solutions
-                </h2>
-            </div>
-
-            <p class="info-text" data-i18n="aboutEcoText">
-                We prioritize organic and environmentally friendly treatment recommendations. By identifying diseases early and precisely, we help you reduce the unnecessary use of broad-spectrum chemicals, protecting your soil and local ecosystem.
-            </p>
-
-        </div>
-
-        <!-- Section 4 -->
-        <div class="info-section">
-
-            <div class="info-header">
-                <div class="info-icon">
-                    <i class="material-icons">savings</i>
-                </div>
-
-                <h2 class="info-title" data-i18n="aboutSavingsTitle">
-                    Save Time & Money
-                </h2>
-            </div>
-
-            <p class="info-text" data-i18n="aboutSavingsText">
-                Preventing crop failure is the best way to save money. By catching issues early, you can take action before the damage spreads, saving your investment and ensuring a bountiful harvest.
-            </p>
-
-        </div>
-
-        <!-- Start Diagnosis Button -->
-        <div style="text-align: center; margin-top: 40px; padding-bottom: 40px;">
-
-            <a href="/diagnosis" class="btn btn-primary btn-full">
-
-                <span data-i18n="Start a New Scan">Start a New Scan</span>
-
-                <i class="material-icons">camera_alt</i>
-
-            </a>
-
-        </div>
-
-    </div>
-
-    <!-- JavaScript -->
     <script>
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('active');
@@ -335,21 +253,13 @@
 
         async function handleLogout() {
             try {
-                await fetch('/api/logout', {
-                    method: 'POST'
-                });
-
-                window.location.href = '/login';
-
+                await fetch('/api/logout', { method: 'POST' });
             } catch (error) {
                 console.error('Logout error:', error);
-                window.location.href = '/login';
             }
+            window.location.href = '/login';
         }
     </script>
-
-    <!-- Language Translation Script -->
     <script src="{{ url_for('static', filename='js/language.js') }}"></script>
-
 </body>
 </html>

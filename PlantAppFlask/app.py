@@ -147,6 +147,14 @@ def history():
     return render_template("history.html")
 
 
+@app.context_processor
+def inject_globals():
+    lang = session.get("language", "en")
+    return {
+        "current_language": lang,
+        "current_lang": lang
+    }
+
 @app.route("/about")
 @login_required
 def about():
@@ -156,11 +164,10 @@ def about():
 @app.route("/schemes")
 @login_required
 def schemes():
-    return render_template("schemes.html")
+    return render_template("schemes.html", current_language=session.get("language", "en"))
 
 
 @app.route("/set-language/<language>")
-@login_required
 def set_language(language):
 
     if language not in ["en", "hi", "mr"]:

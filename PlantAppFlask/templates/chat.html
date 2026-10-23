@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="{{ session.get('lang', 'en') }}">
+<html lang="{{ session.get('language', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlantCare AI - Chat</title>
+    <title data-i18n="chatTitle">PlantCare AI - Plant Doctor</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
@@ -11,12 +11,164 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+            margin: 0;
+            overflow: hidden;
         }
+
         .container {
             display: flex;
             flex-direction: column;
             height: 100%;
-            padding-bottom: 0;
+            padding: 10px 15px 15px;
+            box-sizing: border-box;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .chat-container {
+            background: var(--white);
+            border-radius: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-top: 6px;
+            min-height: 0;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 18px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .bot-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #e4f6e5;
+            color: var(--dark-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.55;
+            font-size: 14.5px;
+            word-break: break-word;
+        }
+
+        .message.bot .message-bubble {
+            background: #f1f5f9;
+            color: #1e293b;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .message-bubble {
+            background: var(--dark-green);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-input {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            border-radius: 25px;
+            font-size: 14.5px;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input input:focus {
+            border-color: var(--dark-green);
+            background: #ffffff;
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--dark-green);
+            color: #ffffff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            background: #1e7039;
+        }
+
+        .typing-indicator {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            padding: 8px 12px;
+        }
+
+        .typing-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #94a3b8;
+            animation: bounce 1.2s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -35,62 +187,95 @@
         <div class="sidebar-menu">
             <a href="/home" class="menu-item">
                 <i class="material-icons">home</i>
-                <span>Home</span>
+                <span data-i18n="home">Home</span>
             </a>
             <a href="/diagnosis" class="menu-item">
                 <i class="material-icons">camera_alt</i>
-                <span>AI Diagnosis</span>
+                <span data-i18n="diagnosis">AI Diagnosis</span>
             </a>
             <a href="/chat" class="menu-item active">
                 <i class="material-icons">chat</i>
-                <span>Plant Doctor</span>
+                <span data-i18n="chat">Plant Doctor</span>
+            </a>
+            <a href="/schemes" class="menu-item">
+                <i class="material-icons">agriculture</i>
+                <span data-i18n="schemesNav">Government Schemes</span>
             </a>
             <a href="/history" class="menu-item">
                 <i class="material-icons">history</i>
-                <span>History</span>
+                <span data-i18n="history">History</span>
             </a>
             <a href="/about" class="menu-item">
                 <i class="material-icons">info</i>
-                <span>About App</span>
+                <span data-i18n="about">About App</span>
             </a>
+
+            <!-- Sidebar Language Picker -->
+            <div class="sidebar-language">
+                <label for="sidebarLangSelect" data-i18n="languageLabel">🌐 Language</label>
+                <select id="sidebarLangSelect" onchange="changeLanguage(this.value)">
+                    <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>English</option>
+                    <option value="hi" {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>हिन्दी (Hindi)</option>
+                    <option value="mr" {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>मराठी (Marathi)</option>
+                </select>
+            </div>
+
             <div style="border-top: 1px solid var(--gray-100); margin: 10px 0;"></div>
-            <a href="#" onclick="handleLogout()" class="menu-item">
+            <a href="#" onclick="handleLogout(); return false;" class="menu-item">
                 <i class="material-icons">logout</i>
-                <span>Logout</span>
+                <span data-i18n="logout">Logout</span>
             </a>
         </div>
     </div>
 
+    <!-- Sidebar Toggle Button -->
+    <button class="sidebar-btn" onclick="toggleSidebar()" aria-label="Toggle navigation">
+        <i class="material-icons">menu</i>
+    </button>
+
     <div class="container">
-        <!-- Sidebar Toggle Button -->
-        <button class="sidebar-btn" onclick="toggleSidebar()">
-            <i class="material-icons">menu</i>
-        </button>
-        <!-- Header -->
+        <!-- Unified Header: Prevents Overlapping -->
         <div class="header">
-            <div style="width:40px;"></div>
-            <h1 class="header-title">Plant Doctor</h1>
-            <div style="width:40px;"></div>
+            <div class="header-left-space"></div>
+            <h1 class="header-title" data-i18n="chatHeader">Plant Doctor</h1>
+            <div class="header-actions">
+                <select class="language-select" id="languageSelect" onchange="changeLanguage(this.value)" aria-label="Select language">
+                    <option value="en" {% if session.get('language', 'en') == 'en' %}selected{% endif %}>English</option>
+                    <option value="hi" {% if session.get('language', 'en') == 'hi' %}selected{% endif %}>हिन्दी</option>
+                    <option value="mr" {% if session.get('language', 'en') == 'mr' %}selected{% endif %}>मराठी</option>
+                </select>
+            </div>
         </div>
 
         <!-- Chat Container -->
-        <div class="chat-container animate-fade-in">
+        <div class="chat-container">
             <div class="chat-messages" id="chatMessages">
-                <!-- Bot Message -->
+                <!-- Welcome Bot Message -->
                 <div class="message bot">
                     <div class="bot-icon">
                         <i class="material-icons">eco</i>
                     </div>
-                    <div class="message-bubble">
+                    <div class="message-bubble" id="welcomeMsg" data-i18n="welcomeMessage">
+                        {% if session.get('language') == 'hi' %}
+                        नमस्ते! मैं आपका प्लांट डॉक्टर एआई हूँ। आज मैं आपके पौधों की देखभाल में कैसे मदद कर सकता हूँ?
+                        {% elif session.get('language') == 'mr' %}
+                        नमस्कार! मी तुमचा प्लांट डॉक्टर एआय आहे. आज मी तुमच्या वनस्पतींच्या आरोग्यासाठी कशी मदत करू शकतो?
+                        {% else %}
                         Hello! I am your Plant Doctor AI. How can I help you with your plants today?
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
             <!-- Input Area -->
             <div class="chat-input">
-                <input type="text" id="messageInput" placeholder="Type your question..." onkeypress="handleKeyPress(event)">
-                <button class="send-btn" onclick="sendMessage()">
+                <input type="text"
+                       id="messageInput"
+                       data-i18n-placeholder="chatPlaceholder"
+                       placeholder="{% if session.get('language') == 'hi' %}अपना प्रश्न यहाँ लिखें...{% elif session.get('language') == 'mr' %}तुमचा प्रश्न येथे टाईप करा...{% else %}Type your question...{% endif %}"
+                       onkeypress="handleKeyPress(event)"
+                       autocomplete="off">
+                <button class="send-btn" onclick="sendMessage()" aria-label="Send">
                     <i class="material-icons">send</i>
                 </button>
             </div>
@@ -98,14 +283,19 @@
     </div>
 
     <script>
-        const responses = [
-            "Based on my analysis, I recommend checking the soil moisture and ensuring proper sunlight exposure for your plant.",
-            "That sounds like it could be a nutrient deficiency. Try adding some organic fertilizer and see if the condition improves.",
-            "Yellowing leaves often indicate overwatering. Let the soil dry out between waterings and ensure proper drainage.",
-            "This appears to be a fungal infection. Apply a copper-based fungicide and remove affected leaves to prevent spreading.",
-            "Great question! Most indoor plants thrive in indirect sunlight and moderate watering. Water when the top inch of soil feels dry.",
-            "For best results, repot your plant every 1-2 years with fresh potting mix to provide new nutrients."
-        ];
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            window.location.href = '/login';
+        }
 
         function handleKeyPress(event) {
             if (event.key === 'Enter') {
@@ -113,21 +303,90 @@
             }
         }
 
-        function sendMessage() {
+        // Offline / Fallback responses per language
+        const fallbackResponses = {
+            en: [
+                "Based on best practices, check soil moisture and ensure adequate indirect sunlight for your plants.",
+                "Yellowing leaves often indicate overwatering. Let the top inch of soil dry out before watering again.",
+                "For fungal issues, remove heavily affected leaves, avoid wetting foliage, and consider organic neem oil or copper spray.",
+                "Healthy soil is key! Add organic compost or vermicompost every few weeks during the growing season."
+            ],
+            hi: [
+                "पौधों की अच्छी देखभाल के लिए मिट्टी की नमी की जांच करें और उचित धूप सुनिश्चित करें।",
+                "पत्तियों का पीला होना अक्सर अधिक पानी देने का संकेत होता है। अगली बार पानी देने से पहले मिट्टी की ऊपरी परत को सूखने दें।",
+                "फफूंद या कीड़ों की समस्या के लिए प्रभावित पत्तों को हटा दें और नीम के तेल का छिड़काव करें।",
+                "पौधों के बेहतर विकास के लिए जैविक खाद या वर्मीकम्पोस्ट का उपयोग करें।"
+            ],
+            mr: [
+                "वनस्पतीच्या चांगल्या वाढीसाठी मातीतील ओलावा तपासा आणि योग्य सूर्यप्रकाश मिळेल याची खात्री करा.",
+                "पाने पिवळी पडणे हे सहसा जास्त पाणी दिल्याचे लक्षण असते. वरची माती सुकल्यावरच पाणी द्या.",
+                "बुरशी किंवा कीड असल्यास बाधित पाने काढून टाका आणि सेंद्रिय कडुनिंबाच्या तेलाची फवारणी करा.",
+                "उत्तम पोषणासाठी दर काही आठवड्यांनी सेंद्रिय खत किंवा गांडूळ खत वापरा."
+            ]
+        };
+
+        async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
-            
             if (!message) return;
 
             // Add user message
             addMessage(message, 'user');
             input.value = '';
 
-            // Simulate bot response
-            setTimeout(() => {
-                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                addMessage(randomResponse, 'bot');
-            }, 1000);
+            // Show typing indicator
+            const typingId = showTyping();
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const data = await response.json();
+                removeTyping(typingId);
+
+                if (data.success && data.response) {
+                    addMessage(data.response, 'bot');
+                } else {
+                    useFallback();
+                }
+            } catch (err) {
+                removeTyping(typingId);
+                useFallback();
+            }
+        }
+
+        function useFallback() {
+            const currentLang = document.documentElement.lang || 'en';
+            const list = fallbackResponses[currentLang] || fallbackResponses.en;
+            const reply = list[Math.floor(Math.random() * list.length)];
+            addMessage(reply, 'bot');
+        }
+
+        function showTyping() {
+            const id = 'typing_' + Date.now();
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = 'message bot';
+            div.innerHTML = `
+                <div class="bot-icon"><i class="material-icons">eco</i></div>
+                <div class="message-bubble typing-indicator">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            return id;
+        }
+
+        function removeTyping(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
         }
 
         function addMessage(text, type) {
@@ -137,9 +396,7 @@
 
             if (type === 'bot') {
                 messageDiv.innerHTML = `
-                    <div class="bot-icon">
-                        <i class="material-icons">eco</i>
-                    </div>
+                    <div class="bot-icon"><i class="material-icons">eco</i></div>
                     <div class="message-bubble">${text}</div>
                 `;
             } else {
@@ -151,22 +408,7 @@
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('sidebarOverlay').classList.toggle('active');
-        }
-
-        async function handleLogout() {
-            try {
-                await fetch('/api/logout', { method: 'POST' });
-                window.location.href = '/login';
-            } catch (error) {
-                console.error('Logout error:', error);
-                window.location.href = '/login';
-            }
-        }
     </script>
-    <!-- Language Script Added Here -->
     <script src="{{ url_for('static', filename='js/language.js') }}"></script>
 </body>
 </html>
